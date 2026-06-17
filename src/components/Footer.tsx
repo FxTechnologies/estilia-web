@@ -8,11 +8,11 @@ const LINKS: Record<string, { label: string; href: string }[]> = {
   Compañía: [
     { label: "Sobre Estilia", href: "/#sobre" },
     { label: "Blog", href: "/blog" },
-    { label: "Carreras", href: "mailto:hola@estilia.hn" },
-    { label: "Prensa", href: "mailto:prensa@estilia.hn" },
+    { label: "Carreras", href: "mailto:hola@esstiliapp.com" },
+    { label: "Prensa", href: "mailto:prensa@esstiliapp.com" },
   ],
   Soporte: [
-    { label: "Centro de ayuda", href: "mailto:ayuda@estilia.hn" },
+    { label: "Centro de ayuda", href: "mailto:ayuda@esstiliapp.com" },
     { label: "Términos de uso", href: "/terminos" },
     { label: "Privacidad", href: "/privacidad" },
     { label: "Contacto", href: "/contacto" },
@@ -53,9 +53,9 @@ export function Footer() {
             {/* Social icons */}
             <div className="flex gap-3">
               {[
-                { id: "instagram", href: "https://instagram.com/estilia.hn" },
-                { id: "facebook", href: "https://facebook.com/estilia.hn" },
-                { id: "tiktok", href: "https://tiktok.com/@estilia.hn" },
+                { id: "instagram", href: "https://instagram.com/esstiliapp" },
+                { id: "facebook", href: "https://facebook.com/esstiliapp" },
+                { id: "tiktok", href: "https://tiktok.com/@esstiliapp" },
               ].map(({ id: s, href }) => (
                 <a key={s} href={href} target="_blank" rel="noopener noreferrer"
                    className="w-8 h-8 rounded-full flex items-center justify-center border border-[#e8d8f5] hover:border-[#875aa0] hover:bg-[#f5eefb] transition-all"

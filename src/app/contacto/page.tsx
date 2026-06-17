@@ -17,7 +17,7 @@ export default function ContactoPage() {
     // Abre cliente de correo con los datos
     const subject = encodeURIComponent(`[Estilia] ${form.asunto}`);
     const body = encodeURIComponent(`Nombre: ${form.nombre}\nEmail: ${form.email}\n\n${form.mensaje}`);
-    window.open(`mailto:hola@estilia.hn?subject=${subject}&body=${body}`, "_blank");
+    window.open(`mailto:hola@esstiliapp.com?subject=${subject}&body=${body}`, "_blank");
     setSent(true);
   }
 
@@ -45,7 +45,7 @@ export default function ContactoPage() {
             <div>
               <h2 className="font-serif font-semibold text-2xl mb-6" style={{ color: "#1c1622" }}>Información de contacto</h2>
               {[
-                { icon: Mail, label: "Email general", value: "hola@estilia.hn", href: "mailto:hola@estilia.hn" },
+                { icon: Mail, label: "Email general", value: "hola@esstiliapp.com", href: "mailto:hola@esstiliapp.com" },
                 { icon: MessageCircle, label: "WhatsApp soporte", value: "+504 9999-0000", href: "https://wa.me/50499990000" },
                 { icon: MapPin, label: "Ubicación", value: "Tegucigalpa, Honduras", href: null },
                 { icon: Clock, label: "Horario de atención", value: "Lun–Vie 8am–6pm (HN)", href: null },
@@ -71,10 +71,10 @@ export default function ContactoPage() {
               <h3 className="font-semibold text-sm mb-4" style={{ color: "#1c1622" }}>Contáctanos según tu consulta</h3>
               <div className="space-y-2">
                 {[
-                  { label: "Clientes — reservas y citas", email: "clientes@estilia.hn" },
-                  { label: "Profesionales — registro y planes", email: "pros@estilia.hn" },
-                  { label: "Prensa y alianzas", email: "prensa@estilia.hn" },
-                  { label: "Problemas técnicos", email: "soporte@estilia.hn" },
+                  { label: "Clientes — reservas y citas", email: "clientes@esstiliapp.com" },
+                  { label: "Profesionales — registro y planes", email: "pros@esstiliapp.com" },
+                  { label: "Prensa y alianzas", email: "prensa@esstiliapp.com" },
+                  { label: "Problemas técnicos", email: "soporte@esstiliapp.com" },
                 ].map(({ label, email }) => (
                   <div key={email} className="flex items-center justify-between gap-4">
                     <span className="text-xs" style={{ color: "#6b5585" }}>{label}</span>
@@ -97,7 +97,7 @@ export default function ContactoPage() {
                   <h3 className="font-serif font-semibold text-xl mb-2" style={{ color: "#1c1622" }}>¡Mensaje enviado!</h3>
                   <p className="text-sm" style={{ color: "#6b5585" }}>
                     Tu cliente de correo debió abrirse. Si no, escríbenos directamente a{" "}
-                    <a href="mailto:hola@estilia.hn" className="underline" style={{ color: "#875aa0" }}>hola@estilia.hn</a>.
+                    <a href="mailto:hola@esstiliapp.com" className="underline" style={{ color: "#875aa0" }}>hola@esstiliapp.com</a>.
                   </p>
                   <button onClick={() => setSent(false)}
                           className="mt-6 text-sm font-semibold px-6 py-2.5 rounded-full border border-[#875aa0]"

@@ -48,7 +48,7 @@ const PLANS = [
     sub: "por mes",
     description: "Para salones, spas y negocios con múltiples profesionales.",
     cta: "Contactar ventas",
-    ctaHref: "mailto:hola@estilia.hn",
+    ctaHref: "mailto:hola@esstiliapp.com",
     highlight: false,
     features: [
       "Todo lo del plan Pro",

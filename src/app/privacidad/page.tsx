@@ -39,7 +39,7 @@ export default function PrivacidadPage() {
             },
             {
               title: "6. Sus derechos",
-              body: `Usted tiene derecho a: acceder a su información personal; corregir datos inexactos; eliminar su cuenta y datos asociados; retirar su consentimiento para notificaciones de marketing; portabilidad de sus datos. Ejerza estos derechos contactándonos en privacidad@estilia.hn.`,
+              body: `Usted tiene derecho a: acceder a su información personal; corregir datos inexactos; eliminar su cuenta y datos asociados; retirar su consentimiento para notificaciones de marketing; portabilidad de sus datos. Ejerza estos derechos contactándonos en privacidad@esstiliapp.com.`,
             },
             {
               title: "7. Cookies y tecnologías similares",
@@ -55,7 +55,7 @@ export default function PrivacidadPage() {
             },
             {
               title: "10. Contacto",
-              body: `Para preguntas sobre privacidad, contáctenos en privacidad@estilia.hn o en Tegucigalpa, Honduras. Responderemos en un plazo de 10 días hábiles.`,
+              body: `Para preguntas sobre privacidad, contáctenos en privacidad@esstiliapp.com o en Tegucigalpa, Honduras. Responderemos en un plazo de 10 días hábiles.`,
             },
           ].map(({ title, body }) => (
             <section key={title} className="mb-8">

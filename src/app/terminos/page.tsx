@@ -59,7 +59,7 @@ export default function TerminosPage() {
             },
             {
               title: "11. Contacto",
-              body: `Para consultas sobre estos términos, contáctenos en legal@estilia.hn o a través de nuestro Centro de Ayuda.`,
+              body: `Para consultas sobre estos términos, contáctenos en legal@esstiliapp.com o a través de nuestro Centro de Ayuda.`,
             },
           ].map(({ title, body }) => (
             <section key={title} className="mb-8">
