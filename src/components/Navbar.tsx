@@ -26,7 +26,7 @@ export function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="hidden md:flex items-center gap-3">
-          <a href="https://apps.apple.com/app/estilia" target="_blank" rel="noopener noreferrer"
+          <a href="/login"
              className="text-sm font-semibold text-[#875aa0] hover:text-[#4a2970] transition-colors px-4 py-2">
             Iniciar sesión
           </a>
@@ -50,8 +50,7 @@ export function Navbar() {
           <a href="/#para-profesionales" className="text-sm font-medium text-[#6b5585]" onClick={() => setOpen(false)}>Para Profesionales</a>
           <a href="/precios" className="text-sm font-medium text-[#6b5585]" onClick={() => setOpen(false)}>Precios</a>
           <hr className="border-[#e8d8f5]" />
-          <a href="https://apps.apple.com/app/estilia" target="_blank" rel="noopener noreferrer"
-             className="text-sm font-semibold text-[#875aa0]">Iniciar sesión</a>
+          <a href="/login" className="text-sm font-semibold text-[#875aa0]">Iniciar sesión</a>
           <a href="/buscar"
              className="text-center text-sm font-bold text-white px-5 py-3 rounded-full"
              style={{ background: "linear-gradient(135deg, #875aa0 0%, #4a2970 100%)" }}>
