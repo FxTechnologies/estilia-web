@@ -11,9 +11,32 @@ export type Pro = {
   category: string;
   city: string;
   bio: string | null;
-  avatar_url: string | null;
-  avg_rating: number | null;
+  image_url: string | null;
+  rating: number | null;
   review_count: number | null;
   whatsapp: string | null;
-  role: string;
+  from_price: number | null;
+  verified: boolean | null;
+  premium: boolean | null;
+  opens_at: string | null;
+  closes_at: string | null;
+  created_at: string | null;
+};
+
+export type Service = {
+  id: string;
+  pro_id: string;
+  name: string;
+  description: string | null;
+  duration_min: number | null;
+  price: number | null;
+};
+
+export type Review = {
+  id: string;
+  pro_id: string;
+  client_name: string | null;
+  rating: number | null;
+  comment: string | null;
+  created_at: string | null;
 };

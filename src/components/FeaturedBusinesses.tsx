@@ -5,22 +5,26 @@ const FALLBACK: Pro[] = [
   {
     id: "1", name: "Urban Face Barbershop", category: "Barbería",
     city: "Col. Palmira, Tegucigalpa", bio: null,
-    avatar_url: null, avg_rating: 4.9, review_count: 142, whatsapp: null, role: "pro",
+    image_url: null, rating: 4.9, review_count: 142, whatsapp: null,
+    from_price: null, verified: null, premium: null, opens_at: null, closes_at: null, created_at: null,
   },
   {
     id: "2", name: "Glam Studio HN", category: "Salón de belleza",
     city: "Zona Viva, La Ceiba", bio: null,
-    avatar_url: null, avg_rating: 4.8, review_count: 98, whatsapp: null, role: "pro",
+    image_url: null, rating: 4.8, review_count: 98, whatsapp: null,
+    from_price: null, verified: null, premium: null, opens_at: null, closes_at: null, created_at: null,
   },
   {
     id: "3", name: "Nail Art Studio", category: "Uñas",
     city: "Barrio Río de Piedras, SPS", bio: null,
-    avatar_url: null, avg_rating: 4.7, review_count: 75, whatsapp: null, role: "pro",
+    image_url: null, rating: 4.7, review_count: 75, whatsapp: null,
+    from_price: null, verified: null, premium: null, opens_at: null, closes_at: null, created_at: null,
   },
   {
     id: "4", name: "Zen Spa & Wellness", category: "Spa",
     city: "West Bay, Roatán", bio: null,
-    avatar_url: null, avg_rating: 5.0, review_count: 61, whatsapp: null, role: "pro",
+    image_url: null, rating: 5.0, review_count: 61, whatsapp: null,
+    from_price: null, verified: null, premium: null, opens_at: null, closes_at: null, created_at: null,
   },
 ];
 
@@ -35,9 +39,8 @@ async function getTopPros(): Promise<Pro[]> {
   const { data } = await supabase
     .from("pros")
     .select("*")
-    .eq("role", "pro")
-    .not("avg_rating", "is", null)
-    .order("avg_rating", { ascending: false })
+    .not("rating", "is", null)
+    .order("rating", { ascending: false })
     .limit(4);
   return data && data.length >= 2 ? (data as Pro[]) : FALLBACK;
 }
@@ -45,15 +48,10 @@ async function getTopPros(): Promise<Pro[]> {
 function ProCard({ pro, index }: { pro: Pro; index: number }) {
   const { bg, accent } = CARD_COLORS[index % CARD_COLORS.length];
   const initials = pro.name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase();
-  const isPremium = (pro.avg_rating ?? 0) >= 4.8;
-  const href = pro.whatsapp
-    ? `https://wa.me/${pro.whatsapp.replace(/\D/g, "")}`
-    : `/buscar?q=${encodeURIComponent(pro.name)}`;
+  const isPremium = pro.premium || (pro.rating ?? 0) >= 4.8;
 
   return (
-    <a href={href}
-       target={pro.whatsapp ? "_blank" : undefined}
-       rel={pro.whatsapp ? "noopener noreferrer" : undefined}
+    <a href={`/pro/${pro.id}`}
        className="group flex flex-col rounded-2xl overflow-hidden border border-[#e8d8f5] bg-white
                   hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
 
@@ -67,11 +65,12 @@ function ProCard({ pro, index }: { pro: Pro; index: number }) {
           </div>
         )}
         <div className="w-14 h-14 rounded-2xl border-2 border-white flex items-center justify-center
-                        text-base font-bold text-white shadow-lg translate-y-7 overflow-hidden"
+                        text-base font-bold text-white shadow-lg translate-y-7 overflow-hidden relative"
              style={{ background: bg }}>
-          {pro.avatar_url
-            ? <img src={pro.avatar_url} alt={pro.name} className="w-full h-full object-cover" />
-            : initials}
+          <span className="absolute inset-0 flex items-center justify-center">{initials}</span>
+          {pro.image_url && (
+            <img src={pro.image_url} alt={pro.name} className="w-full h-full object-cover relative z-10" />
+          )}
         </div>
       </div>
 
@@ -85,17 +84,17 @@ function ProCard({ pro, index }: { pro: Pro; index: number }) {
           </span>
         </div>
 
-        {pro.avg_rating != null && (
+        {pro.rating != null && (
           <div className="flex items-center gap-1">
             <div className="flex gap-0.5">
               {[1,2,3,4,5].map(i => (
                 <svg key={i} width="10" height="10" viewBox="0 0 24 24"
-                     fill={i <= Math.round(pro.avg_rating!) ? "#d3b87f" : "#e8d8f5"}>
+                     fill={i <= Math.round(pro.rating!) ? "#d3b87f" : "#e8d8f5"}>
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
               ))}
             </div>
-            <span className="text-xs font-bold" style={{ color: "#1c1622" }}>{pro.avg_rating.toFixed(1)}</span>
+            <span className="text-xs font-bold" style={{ color: "#1c1622" }}>{pro.rating.toFixed(1)}</span>
             {pro.review_count != null && (
               <span className="text-xs" style={{ color: "#9d8ab0" }}>({pro.review_count})</span>
             )}
@@ -107,13 +106,11 @@ function ProCard({ pro, index }: { pro: Pro; index: number }) {
           <span className="text-[10px] truncate" style={{ color: "#6b5585" }}>{pro.city}</span>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <Clock size={11} style={{ color: "#875aa0" }} />
-          <span className="text-[10px]" style={{ color: "#875aa0" }}>Disponible hoy</span>
-        </div>
-
-        {pro.bio && (
-          <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: "#6b5585" }}>{pro.bio}</p>
+        {pro.from_price != null && (
+          <div className="flex items-center gap-1.5">
+            <Clock size={11} style={{ color: "#875aa0" }} />
+            <span className="text-[10px]" style={{ color: "#875aa0" }}>Desde L {pro.from_price}</span>
+          </div>
         )}
 
         <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#e8d8f5]">

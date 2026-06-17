@@ -135,11 +135,12 @@ function ProCard({ pro }: { pro: Pro }) {
       {/* Header */}
       <div className="relative h-24 flex items-end px-4"
            style={{ background: "linear-gradient(135deg,#1c1622,#4a2970)" }}>
-        <div className="w-12 h-12 rounded-xl border-2 border-white flex items-center justify-center text-sm font-bold text-white shadow-lg translate-y-6"
+        <div className="w-12 h-12 rounded-xl border-2 border-white flex items-center justify-center text-sm font-bold text-white shadow-lg translate-y-6 overflow-hidden relative"
              style={{ background: "#875aa0" }}>
-          {pro.avatar_url
-            ? <img src={pro.avatar_url} alt={pro.name} className="w-full h-full object-cover rounded-xl" />
-            : initials}
+          <span className="absolute inset-0 flex items-center justify-center">{initials}</span>
+          {pro.image_url && (
+            <img src={pro.image_url} alt={pro.name} className="w-full h-full object-cover relative z-10 rounded-xl" />
+          )}
         </div>
       </div>
 
@@ -152,10 +153,10 @@ function ProCard({ pro }: { pro: Pro }) {
           </span>
         </div>
 
-        {pro.avg_rating != null && (
+        {pro.rating != null && (
           <div className="flex items-center gap-1">
             <Star size={11} fill="#d3b87f" stroke="none" />
-            <span className="text-xs font-bold" style={{ color: "#1c1622" }}>{pro.avg_rating.toFixed(1)}</span>
+            <span className="text-xs font-bold" style={{ color: "#1c1622" }}>{pro.rating.toFixed(1)}</span>
             {pro.review_count != null && (
               <span className="text-xs" style={{ color: "#9d8ab0" }}>({pro.review_count})</span>
             )}
@@ -171,19 +172,19 @@ function ProCard({ pro }: { pro: Pro }) {
           <p className="text-[11px] leading-relaxed line-clamp-2" style={{ color: "#6b5585" }}>{pro.bio}</p>
         )}
 
-        <div className="mt-auto pt-3 border-t border-[#e8d8f5]">
-          {pro.whatsapp ? (
+        <div className="mt-auto pt-3 border-t border-[#e8d8f5] flex gap-2">
+          <a href={`/pro/${pro.id}`}
+             className="flex-1 text-center text-xs font-bold py-2 px-3 rounded-full border border-[#875aa0]"
+             style={{ color: "#875aa0" }}>
+            Ver perfil
+          </a>
+          {pro.whatsapp && (
             <a href={`https://wa.me/${pro.whatsapp.replace(/\D/g, "")}`}
                target="_blank" rel="noopener noreferrer"
-               className="block text-center text-xs font-bold py-2 px-4 rounded-full text-white"
+               className="flex-1 text-center text-xs font-bold py-2 px-3 rounded-full text-white"
                style={{ background: "linear-gradient(135deg,#875aa0,#4a2970)" }}>
-              Reservar por WhatsApp
+              Reservar
             </a>
-          ) : (
-            <button className="w-full text-xs font-bold py-2 px-4 rounded-full text-white"
-                    style={{ background: "linear-gradient(135deg,#875aa0,#4a2970)" }}>
-              Ver perfil
-            </button>
           )}
         </div>
       </div>
