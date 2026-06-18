@@ -44,10 +44,25 @@ export default function LoginPage() {
       email, password,
       options: { data: { full_name: fullName, role } }
     });
-    if (signUpErr) { setError(signUpErr.message); setLoading(false); return; }
-    if (data.user) {
-      await sb.from("profiles").upsert({ id: data.user.id, full_name: fullName, role });
+
+    if (signUpErr) {
+      setError(signUpErr.message);
+      setLoading(false); return;
     }
+
+    // Email already registered (Supabase returns user with empty identities)
+    if (data.user && data.user.identities?.length === 0) {
+      setError("Este correo ya tiene una cuenta. Usa 'Iniciar sesión'.");
+      setLoading(false); return;
+    }
+
+    // Save profile — best effort (RLS may block, that's ok)
+    if (data.user?.id) {
+      await sb.from("profiles").upsert({
+        id: data.user.id, full_name: fullName, role,
+      }).then(() => null); // ignore result, don't let it render
+    }
+
     setSuccess("¡Cuenta creada! Revisa tu correo para confirmar y luego inicia sesión.");
     setLoading(false);
   }
