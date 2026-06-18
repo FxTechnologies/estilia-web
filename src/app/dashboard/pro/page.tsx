@@ -33,17 +33,17 @@ export default function ProDashboard() {
       setUserEmail(user.email ?? "");
 
       const { data: proData } = await sb.from("pros").select("*").eq("user_id", user.id).maybeSingle();
-      if (!proData) { router.push("/login"); return; }
-      setPro(proData as Pro);
-
-      const [{ data: svcs }, { data: revs }, { data: apts }] = await Promise.all([
-        sb.from("services").select("*").eq("pro_id", proData.id).order("price"),
-        sb.from("reviews").select("*").eq("pro_id", proData.id).order("created_at", { ascending: false }).limit(10),
-        sb.from("appointments").select("*").eq("pro_id", proData.id).order("scheduled_at", { ascending: false }).limit(20),
-      ]);
-      setServices((svcs ?? []) as Service[]);
-      setReviews((revs ?? []) as Review[]);
-      setAppointments((apts ?? []) as Appointment[]);
+      if (proData) {
+        setPro(proData as Pro);
+        const [{ data: svcs }, { data: revs }, { data: apts }] = await Promise.all([
+          sb.from("services").select("*").eq("pro_id", proData.id).order("price"),
+          sb.from("reviews").select("*").eq("pro_id", proData.id).order("created_at", { ascending: false }).limit(10),
+          sb.from("appointments").select("*").eq("pro_id", proData.id).order("scheduled_at", { ascending: false }).limit(20),
+        ]);
+        setServices((svcs ?? []) as Service[]);
+        setReviews((revs ?? []) as Review[]);
+        setAppointments((apts ?? []) as Appointment[]);
+      }
       setLoading(false);
     })();
   }, [router]);
