@@ -56,13 +56,27 @@ export default function LoginPage() {
       setLoading(false); return;
     }
 
-    // Save profile — best effort, fully fire-and-forget
+    // Save profile — best effort, fire-and-forget
     if (data.user?.id) {
       sb.from("profiles").upsert({ id: data.user.id, full_name: fullName, role }).then(
         () => {}, () => {}
       );
     }
 
+    // If session exists (email confirmation disabled), redirect immediately
+    if (data.session) {
+      window.location.href = role === "negocio" ? "/dashboard/negocio" : "/dashboard/pro";
+      return;
+    }
+
+    // Email confirmation required — try signing in anyway
+    const { data: signInData, error: signInErr } = await sb.auth.signInWithPassword({ email, password });
+    if (!signInErr && signInData.session) {
+      window.location.href = role === "negocio" ? "/dashboard/negocio" : "/dashboard/pro";
+      return;
+    }
+
+    // Fallback: show confirmation message
     setSuccess("¡Cuenta creada! Revisa tu correo para confirmar y luego inicia sesión.");
     setLoading(false);
   }
