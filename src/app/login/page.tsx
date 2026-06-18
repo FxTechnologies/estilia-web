@@ -22,15 +22,18 @@ export default function LoginPage() {
     const sb = createClient();
     const { data, error: authErr } = await sb.auth.signInWithPassword({ email, password });
     if (authErr || !data.user) {
-      setError("Correo o contraseña incorrectos.");
+      setError(authErr?.message === "Email not confirmed"
+        ? "Debes confirmar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada."
+        : "Correo o contraseña incorrectos.");
       setLoading(false); return;
     }
-    // Determine role: check pros table first, then profiles
+    // Determine destination based on role
     const { data: proData } = await sb.from("pros").select("id").eq("user_id", data.user.id).maybeSingle();
-    if (proData) { router.push("/dashboard/pro"); return; }
+    if (proData) { window.location.href = "/dashboard/pro"; return; }
     const { data: profile } = await sb.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
-    if (profile?.role === "negocio") { router.push("/dashboard/negocio"); return; }
-    router.push("/dashboard/pro");
+    if (profile?.role === "negocio") { window.location.href = "/dashboard/negocio"; return; }
+    // Default: pro dashboard
+    window.location.href = "/dashboard/pro";
   }
 
   async function handleRegister(e: React.FormEvent) {
