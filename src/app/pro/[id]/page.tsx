@@ -180,7 +180,7 @@ export default async function ProPage({ params }: { params: Promise<{ id: string
                       <div key={r.id} className="pb-4 border-b border-[#f5eefb] last:border-0">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-semibold" style={{ color: "#1c1622" }}>
-                            {r.client_name ?? "Cliente"}
+                            {"Cliente"}
                           </span>
                           {r.rating != null && (
                             <div className="flex items-center gap-0.5">
