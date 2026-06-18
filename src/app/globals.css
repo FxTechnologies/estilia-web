@@ -105,3 +105,31 @@ body {
   to   { opacity: 1; transform: none; }
 }
 .fade-up { animation: esFadeUp .55s cubic-bezier(.22,.68,0,1.2) both; }
+
+/* Categories */
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(160px,1fr)); gap: 16px; }
+.cat-card { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 4/5; background: var(--surface-beige); box-shadow: var(--shadow-sm); text-decoration: none; display: block; transition: transform .2s ease, box-shadow .2s ease; }
+.cat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.cat-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cat-overlay { position: absolute; inset: 0; background: linear-gradient(to top,rgba(28,22,34,0.80),rgba(28,22,34,0.04) 60%); }
+.cat-text { position: absolute; left: 14px; right: 14px; bottom: 14px; }
+.cat-label { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: #fff; line-height: 1.05; letter-spacing: -0.01em; }
+.cat-count { font-family: var(--font-sans); font-size: 11.5px; color: rgba(255,255,255,0.78); margin-top: 3px; }
+
+/* FeaturedBusinesses carousel arrow buttons */
+.carousel-btn { width: 40px; height: 40px; border-radius: 999px; border: 1.5px solid var(--border-default); background: var(--surface-card); cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--ink-700); transition: background .15s, color .15s, border-color .15s; }
+.carousel-btn:hover { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+/* ProCard */
+.pro-card { display: block; text-decoration: none; flex-shrink: 0; width: 280px; border-radius: 18px; overflow: hidden; background: var(--surface-card); box-shadow: var(--shadow-md); transition: transform .2s ease, box-shadow .2s ease; scroll-snap-align: start; }
+.pro-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-xl); }
+
+/* AppDownloadBanner store buttons */
+.store-btn-light { display: inline-flex; align-items: center; gap: 10px; background: #fff; color: var(--ink-900); padding: 12px 22px; border-radius: 14px; text-decoration: none; font-family: var(--font-sans); box-shadow: 0 4px 14px rgba(0,0,0,.25); transition: transform .2s; }
+.store-btn-light:hover { transform: translateY(-2px); }
+.store-btn-dark { display: inline-flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.12); border: 1.5px solid rgba(255,255,255,0.25); color: #fff; padding: 12px 22px; border-radius: 14px; text-decoration: none; font-family: var(--font-sans); transition: transform .2s, background .2s; }
+.store-btn-dark:hover { transform: translateY(-2px); background: rgba(255,255,255,0.20); }
+
+/* ForBusiness CTA button */
+.forbiz-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--brand); color: #fff; font-family: var(--font-sans); font-size: 15px; font-weight: 700; padding: 14px 28px; border-radius: 999px; text-decoration: none; box-shadow: var(--shadow-brand); transition: transform .2s; }
+.forbiz-btn:hover { transform: translateY(-2px); }

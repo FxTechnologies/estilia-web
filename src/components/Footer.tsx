@@ -1,3 +1,5 @@
+"use client";
+
 const LINKS = {
   "Plataforma": [
     { label: "Explorar profesionales", href: "/buscar" },

@@ -23,9 +23,7 @@ export function ForBusiness() {
           <p style={{ fontFamily: "var(--font-sans)", fontSize: 16, color: "var(--ink-600)", lineHeight: 1.65, margin: "0 0 32px" }}>
             Únete a más de 320 profesionales que ya usan Estilia para conectar con nuevos clientes y hacer crecer su negocio en Honduras.
           </p>
-          <a href="/login" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "var(--brand)", color: "#fff", fontFamily: "var(--font-sans)", fontSize: 15, fontWeight: 700, padding: "14px 28px", borderRadius: 999, textDecoration: "none", boxShadow: "var(--shadow-brand)", transition: "transform .2s" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "none"; }}>
+          <a href="/login" className="forbiz-btn">
             Registrar mi negocio gratis
             <ArrowRight size={16} />
           </a>
@@ -47,7 +45,7 @@ export function ForBusiness() {
               <div style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--ink-500)", fontWeight: 500 }}>Precio de lanzamiento</div>
               <div style={{ fontFamily: "var(--font-display)", fontSize: 26, fontWeight: 600, color: "var(--brand)" }}>Gratis</div>
             </div>
-            <div style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--ink-500)", maxWidth: 140, textAlign: "right" }}>Sin comisiones durante los primeros 6 meses</div>
+            <div style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--ink-500)", maxWidth: 140, textAlign: "right" as const }}>Sin comisiones durante los primeros 6 meses</div>
           </div>
         </div>
       </div>

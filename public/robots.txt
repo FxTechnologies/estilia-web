@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://esstiliapp.com
+
+# Sitemaps
+Sitemap: https://esstiliapp.com/sitemap.xml
