@@ -46,7 +46,7 @@ export default function LoginPage() {
     });
 
     if (signUpErr) {
-      setError(signUpErr.message);
+      setError(String(signUpErr.message ?? "Error al crear la cuenta."));
       setLoading(false); return;
     }
 
@@ -56,11 +56,11 @@ export default function LoginPage() {
       setLoading(false); return;
     }
 
-    // Save profile — best effort (RLS may block, that's ok)
+    // Save profile — best effort, fully fire-and-forget
     if (data.user?.id) {
-      await sb.from("profiles").upsert({
-        id: data.user.id, full_name: fullName, role,
-      }).then(() => null); // ignore result, don't let it render
+      sb.from("profiles").upsert({ id: data.user.id, full_name: fullName, role }).then(
+        () => {}, () => {}
+      );
     }
 
     setSuccess("¡Cuenta creada! Revisa tu correo para confirmar y luego inicia sesión.");
