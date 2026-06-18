@@ -1,95 +1,74 @@
-const LINKS: Record<string, { label: string; href: string }[]> = {
-  Plataforma: [
-    { label: "Cómo funciona", href: "/#como-funciona" },
-    { label: "Para profesionales", href: "/#para-profesionales" },
-    { label: "Precios", href: "/precios" },
-    { label: "Descargar app", href: "https://apps.apple.com/app/estilia" },
+const LINKS = {
+  "Plataforma": [
+    { label: "Explorar profesionales", href: "/buscar" },
+    { label: "Categorías", href: "/#categorias" },
+    { label: "Cómo funciona", href: "/#app" },
+    { label: "Descargar app", href: "/#app" },
   ],
-  Compañía: [
-    { label: "Sobre Estilia", href: "/#sobre" },
-    { label: "Blog", href: "/blog" },
-    { label: "Carreras", href: "mailto:hola@esstiliapp.com" },
-    { label: "Prensa", href: "mailto:prensa@esstiliapp.com" },
+  "Para negocios": [
+    { label: "Registrar negocio", href: "/login" },
+    { label: "Dashboard pro", href: "/dashboard/pro" },
+    { label: "Planes y precios", href: "/#para-negocios" },
   ],
-  Soporte: [
-    { label: "Centro de ayuda", href: "mailto:ayuda@esstiliapp.com" },
-    { label: "Términos de uso", href: "/terminos" },
-    { label: "Privacidad", href: "/privacidad" },
-    { label: "Contacto", href: "/contacto" },
-  ],
-  Ciudades: [
-    { label: "Tegucigalpa", href: "/buscar?ciudad=Tegucigalpa" },
-    { label: "San Pedro Sula", href: "/buscar?ciudad=San+Pedro+Sula" },
-    { label: "La Ceiba", href: "/buscar?ciudad=La+Ceiba" },
-    { label: "Roatán", href: "/buscar?ciudad=Roat%C3%A1n" },
-    { label: "Comayagua", href: "/buscar?ciudad=Comayagua" },
+  "Soporte": [
+    { label: "Centro de ayuda", href: "#" },
+    { label: "Contacto", href: "#" },
+    { label: "Términos de uso", href: "#" },
+    { label: "Privacidad", href: "#" },
   ],
 };
 
+const CITIES = ["Tegucigalpa", "San Pedro Sula", "La Ceiba", "Comayagua", "Choluteca"];
+
 export function Footer() {
   return (
-    <footer className="border-t border-[#e8d8f5]" style={{ background: "#ffffff" }}>
-      <div className="max-w-6xl mx-auto px-5 py-16">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-10">
-          {/* Brand col */}
-          <div className="col-span-2 md:col-span-1 space-y-4">
-            <div className="flex items-center gap-2.5">
-              <span className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                    style={{ background: "#875aa0" }}>
+    <footer style={{ background: "var(--ink-900)", color: "rgba(255,255,255,0.70)", fontFamily: "var(--font-sans)" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "64px clamp(18px,4vw,40px) 32px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr repeat(3,1fr)", gap: 48, marginBottom: 48 }}>
+          <div>
+            <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 10, textDecoration: "none", marginBottom: 18 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 <svg width="18" height="18" viewBox="0 0 64 64" fill="none">
                   <line x1="14" y1="18" x2="50" y2="18" stroke="white" strokeWidth="5.5" strokeLinecap="round"/>
                   <line x1="14" y1="32" x2="38" y2="32" stroke="white" strokeWidth="5.5" strokeLinecap="round"/>
                   <line x1="14" y1="46" x2="50" y2="46" stroke="white" strokeWidth="5.5" strokeLinecap="round"/>
                   <circle cx="53" cy="18" r="5" fill="#d3b87f"/>
                 </svg>
-              </span>
-              <span className="font-serif font-semibold text-xl" style={{ color: "#1c1622" }}>Estilia</span>
-            </div>
-            <p className="text-xs leading-relaxed" style={{ color: "#6b5585" }}>
-              Tu tiempo, tu estilo.<br />
-              El marketplace de belleza<br />
-              y bienestar de Honduras.
+              </div>
+              <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, color: "#fff", letterSpacing: "-0.01em" }}>Estilia</span>
+            </a>
+            <p style={{ fontSize: 14, lineHeight: 1.65, marginBottom: 20, color: "rgba(255,255,255,0.55)", maxWidth: 260, margin: "0 0 20px" }}>
+              El marketplace de belleza y bienestar de Honduras. Conectamos profesionales con clientes en segundos.
             </p>
-            {/* Social icons */}
-            <div className="flex gap-3">
-              {[
-                { id: "instagram", href: "https://instagram.com/esstiliapp" },
-                { id: "facebook", href: "https://facebook.com/esstiliapp" },
-                { id: "tiktok", href: "https://tiktok.com/@esstiliapp" },
-              ].map(({ id: s, href }) => (
-                <a key={s} href={href} target="_blank" rel="noopener noreferrer"
-                   className="w-8 h-8 rounded-full flex items-center justify-center border border-[#e8d8f5] hover:border-[#875aa0] hover:bg-[#f5eefb] transition-all"
-                   style={{ color: "#6b5585" }}>
-                  <span className="text-[10px] font-bold uppercase">{s[0]}</span>
-                </a>
-              ))}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--gold-400)", marginBottom: 10 }}>Ciudades disponibles</div>
+              <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 6 }}>
+                {CITIES.map(c => (
+                  <a key={c} href={`/buscar?ciudad=${c}`} style={{ fontSize: 12, background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.65)", padding: "4px 10px", borderRadius: 999, textDecoration: "none", border: "1px solid rgba(255,255,255,0.10)" }}>
+                    {c}
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
-
-          {/* Link columns */}
-          {Object.entries(LINKS).map(([section, links]) => (
-            <div key={section} className="space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider" style={{ color: "#1c1622" }}>{section}</h4>
-              <ul className="space-y-2">
-                {links.map(({ label, href }) => (
-                  <li key={label}>
-                    <a href={href} className="text-xs transition-colors hover:text-[#875aa0]" style={{ color: "#6b5585" }}>
-                      {label}
-                    </a>
-                  </li>
+          {Object.entries(LINKS).map(([col, items]) => (
+            <div key={col}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase" as const, color: "var(--gold-400)", marginBottom: 16 }}>{col}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {items.map(({ label, href }) => (
+                  <a key={label} href={href} style={{ fontSize: 14, color: "rgba(255,255,255,0.60)", textDecoration: "none", transition: "color .15s" }}
+                    onMouseEnter={e => { (e.target as HTMLElement).style.color = "#fff"; }}
+                    onMouseLeave={e => { (e.target as HTMLElement).style.color = "rgba(255,255,255,0.60)"; }}>
+                    {label}
+                  </a>
                 ))}
-              </ul>
+              </div>
             </div>
           ))}
         </div>
-
-        <div className="mt-14 pt-6 border-t border-[#e8d8f5] flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs" style={{ color: "#9d8ab0" }}>
-            © {new Date().getFullYear()} Estilia. Todos los derechos reservados.
-          </p>
-          <p className="text-xs" style={{ color: "#9d8ab0" }}>
-            Hecho con <span style={{ color: "#d3b87f" }}>♥</span> en Honduras
-          </p>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.10)", paddingTop: 24, display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" as const, gap: 12 }}>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.40)" }}>© 2026 Estilia · esstiliapp.com · Honduras</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.40)" }}>Hecho con ♥ en Honduras</div>
         </div>
       </div>
     </footer>

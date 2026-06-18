@@ -1,155 +1,92 @@
-import { Star, MapPin, Clock, ArrowRight } from "lucide-react";
-import { supabase, type Pro } from "@/lib/supabase";
+"use client";
+import { useState, useRef } from "react";
+import { ChevronLeft, ChevronRight, Star, CheckCircle, MapPin } from "lucide-react";
 
-const FALLBACK: Pro[] = [
-  {
-    id: "1", name: "Urban Face Barbershop", category: "Barbería",
-    city: "Col. Palmira, Tegucigalpa", bio: null,
-    image_url: null, rating: 4.9, review_count: 142, whatsapp: null,
-    from_price: null, verified: null, premium: null, opens_at: null, closes_at: null, created_at: null,
-  },
-  {
-    id: "2", name: "Glam Studio HN", category: "Salón de belleza",
-    city: "Zona Viva, La Ceiba", bio: null,
-    image_url: null, rating: 4.8, review_count: 98, whatsapp: null,
-    from_price: null, verified: null, premium: null, opens_at: null, closes_at: null, created_at: null,
-  },
-  {
-    id: "3", name: "Nail Art Studio", category: "Uñas",
-    city: "Barrio Río de Piedras, SPS", bio: null,
-    image_url: null, rating: 4.7, review_count: 75, whatsapp: null,
-    from_price: null, verified: null, premium: null, opens_at: null, closes_at: null, created_at: null,
-  },
-  {
-    id: "4", name: "Zen Spa & Wellness", category: "Spa",
-    city: "West Bay, Roatán", bio: null,
-    image_url: null, rating: 5.0, review_count: 61, whatsapp: null,
-    from_price: null, verified: null, premium: null, opens_at: null, closes_at: null, created_at: null,
-  },
+const FALLBACK: { id: string; name: string; category: string; city: string; rating: number; review_count: number; from_price: number; image_url: string; verified: boolean; premium: boolean }[] = [
+  { id: "1", name: "Studio 21 Barbershop", category: "Barbería", city: "Tegucigalpa", rating: 4.9, review_count: 124, from_price: 250, image_url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400&q=80&auto=format&fit=crop", verified: true, premium: true },
+  { id: "2", name: "Belleza Tica Salon", category: "Salón de belleza", city: "San Pedro Sula", rating: 4.8, review_count: 89, from_price: 180, image_url: "https://images.unsplash.com/photo-1562322140-8baeececf3df?w=400&q=80&auto=format&fit=crop", verified: true, premium: false },
+  { id: "3", name: "Nail Art by Karen", category: "Uñas", city: "Tegucigalpa", rating: 4.9, review_count: 201, from_price: 320, image_url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&q=80&auto=format&fit=crop", verified: true, premium: true },
+  { id: "4", name: "Serena Spa", category: "Spa & Masajes", city: "La Ceiba", rating: 4.7, review_count: 56, from_price: 450, image_url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&q=80&auto=format&fit=crop", verified: true, premium: false },
+  { id: "5", name: "Glam Makeup Studio", category: "Maquillaje", city: "Tegucigalpa", rating: 5.0, review_count: 43, from_price: 600, image_url: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400&q=80&auto=format&fit=crop", verified: true, premium: true },
 ];
 
-const CARD_COLORS = [
-  { bg: "#1c1622", accent: "#875aa0" },
-  { bg: "#4a2970", accent: "#d3b87f" },
-  { bg: "#875aa0", accent: "#d3b87f" },
-  { bg: "#2d1b4e", accent: "#875aa0" },
-];
-
-async function getTopPros(): Promise<Pro[]> {
-  const { data } = await supabase
-    .from("pros")
-    .select("*")
-    .not("rating", "is", null)
-    .order("rating", { ascending: false })
-    .limit(4);
-  return data && data.length >= 2 ? (data as Pro[]) : FALLBACK;
-}
-
-function ProCard({ pro, index }: { pro: Pro; index: number }) {
-  const { bg, accent } = CARD_COLORS[index % CARD_COLORS.length];
-  const initials = pro.name.split(" ").slice(0, 2).map((w: string) => w[0]).join("").toUpperCase();
-  const isPremium = pro.premium || (pro.rating ?? 0) >= 4.8;
-
+function ProCard({ pro }: { pro: typeof FALLBACK[0] }) {
   return (
-    <a href={`/pro/${pro.id}`}
-       className="group flex flex-col rounded-2xl overflow-hidden border border-[#e8d8f5] bg-white
-                  hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-
-      {/* Header banner */}
-      <div className="relative h-28 flex items-end px-4 pb-0"
-           style={{ background: `linear-gradient(135deg, ${bg} 0%, ${accent}55 100%)` }}>
-        {isPremium && (
-          <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold"
-               style={{ background: "#d3b87f", color: "#1c1622" }}>
-            <Star size={8} fill="#1c1622" stroke="none" /> Premium
+    <a href={`/pro/${pro.id}`} style={{ display: "block", textDecoration: "none", flexShrink: 0, width: 280, borderRadius: 18, overflow: "hidden", background: "var(--surface-card)", boxShadow: "var(--shadow-md)", transition: "transform .2s ease, box-shadow .2s ease", scrollSnapAlign: "start" }}
+      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-5px)"; (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-xl)"; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "none"; (e.currentTarget as HTMLElement).style.boxShadow = "var(--shadow-md)"; }}>
+      <div style={{ position: "relative", height: 180, overflow: "hidden" }}>
+        <img src={pro.image_url} alt={pro.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        {pro.premium && (
+          <div style={{ position: "absolute", top: 12, left: 12, background: "var(--gold-500)", color: "#2b1e0a", fontFamily: "var(--font-sans)", fontSize: 10.5, fontWeight: 800, padding: "3px 8px", borderRadius: 999, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            Premium
           </div>
         )}
-        <div className="w-14 h-14 rounded-2xl border-2 border-white flex items-center justify-center
-                        text-base font-bold text-white shadow-lg translate-y-7 overflow-hidden relative"
-             style={{ background: bg }}>
-          <span className="absolute inset-0 flex items-center justify-center">{initials}</span>
-          {pro.image_url && (
-            <img src={pro.image_url} alt={pro.name} className="w-full h-full object-cover relative z-10" />
-          )}
-        </div>
       </div>
-
-      {/* Body */}
-      <div className="flex flex-col flex-1 px-4 pt-9 pb-4 gap-3">
-        <div>
-          <h3 className="text-sm font-bold leading-snug" style={{ color: "#1c1622" }}>{pro.name}</h3>
-          <span className="inline-block mt-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                style={{ background: "#f5eefb", color: "#875aa0" }}>
-            {pro.category}
-          </span>
-        </div>
-
-        {pro.rating != null && (
-          <div className="flex items-center gap-1">
-            <div className="flex gap-0.5">
-              {[1,2,3,4,5].map(i => (
-                <svg key={i} width="10" height="10" viewBox="0 0 24 24"
-                     fill={i <= Math.round(pro.rating!) ? "#d3b87f" : "#e8d8f5"}>
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-              ))}
+      <div style={{ padding: "16px 18px 18px" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 6 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 18, color: "var(--ink-900)", letterSpacing: "-0.01em", lineHeight: 1.1 }}>{pro.name}</span>
+              {pro.verified && <CheckCircle size={14} color="var(--brand)" />}
             </div>
-            <span className="text-xs font-bold" style={{ color: "#1c1622" }}>{pro.rating.toFixed(1)}</span>
-            {pro.review_count != null && (
-              <span className="text-xs" style={{ color: "#9d8ab0" }}>({pro.review_count})</span>
-            )}
+            <div style={{ fontFamily: "var(--font-sans)", fontSize: 12.5, color: "var(--ink-500)", marginTop: 2 }}>{pro.category}</div>
           </div>
-        )}
-
-        <div className="flex items-center gap-1.5">
-          <MapPin size={11} style={{ color: "#d3b87f" }} />
-          <span className="text-[10px] truncate" style={{ color: "#6b5585" }}>{pro.city}</span>
         </div>
-
-        {pro.from_price != null && (
-          <div className="flex items-center gap-1.5">
-            <Clock size={11} style={{ color: "#875aa0" }} />
-            <span className="text-[10px]" style={{ color: "#875aa0" }}>Desde L {pro.from_price}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <Star size={13} fill="var(--star)" color="var(--star)" />
+            <span style={{ fontFamily: "var(--font-sans)", fontSize: 13, fontWeight: 700, color: "var(--ink-800)" }}>{pro.rating.toFixed(1)}</span>
+            <span style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--ink-400)" }}>({pro.review_count})</span>
           </div>
-        )}
-
-        <div className="flex items-center justify-between mt-auto pt-3 border-t border-[#e8d8f5]">
-          <span className="text-xs font-semibold" style={{ color: "#6b5585" }}>Ver perfil</span>
-          <span className="text-xs font-bold px-3 py-1.5 rounded-full text-white transition-all
-                           group-hover:shadow-md"
-                style={{ background: "linear-gradient(135deg,#875aa0,#4a2970)" }}>
-            Reservar
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 3, color: "var(--ink-500)" }}>
+            <MapPin size={11} />
+            <span style={{ fontFamily: "var(--font-sans)", fontSize: 12 }}>{pro.city}</span>
+          </div>
+        </div>
+        <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--ink-400)" }}>Desde </span>
+            <span style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600, color: "var(--brand)" }}>L {pro.from_price}</span>
+          </div>
+          <div style={{ background: "var(--brand)", color: "#fff", fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 700, padding: "7px 14px", borderRadius: 999 }}>
+            Ver perfil
+          </div>
         </div>
       </div>
     </a>
   );
 }
 
-export async function FeaturedBusinesses() {
-  const pros = await getTopPros();
+export function FeaturedBusinesses() {
+  const ref = useRef<HTMLDivElement>(null);
+  const scroll = (dir: number) => ref.current?.scrollBy({ left: dir * 300, behavior: "smooth" });
 
   return (
-    <section id="negocios" className="py-24 px-5" style={{ background: "#ffffff" }}>
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-12">
+    <section style={{ background: "var(--surface-beige)", padding: "clamp(56px,8vw,96px) 0" }}>
+      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 clamp(18px,4vw,40px)" }}>
+        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
           <div>
-            <p className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#875aa0" }}>
-              Negocios destacados
-            </p>
-            <h2 className="font-serif font-semibold text-4xl md:text-5xl" style={{ color: "#1c1622" }}>
-              Los mejores cerca{" "}
-              <span className="text-gradient">de ti</span>
+            <div style={{ fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "var(--gold-600)", marginBottom: 8 }}>
+              Lo mejor de Estilia
+            </div>
+            <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, letterSpacing: "-0.02em", lineHeight: 1.05, color: "var(--ink-900)", margin: 0, fontSize: "clamp(1.9rem,3.4vw,2.8rem)" }}>
+              Profesionales destacados
             </h2>
           </div>
-          <a href="/buscar" className="inline-flex items-center gap-2 text-sm font-semibold shrink-0 transition-colors hover:text-[#4a2970]"
-             style={{ color: "#875aa0" }}>
-            Ver todos <ArrowRight size={16} />
-          </a>
+          <div style={{ display: "flex", gap: 8 }}>
+            {[{ dir: -1, icon: <ChevronLeft size={18} /> }, { dir: 1, icon: <ChevronRight size={18} /> }].map(({ dir, icon }) => (
+              <button key={dir} onClick={() => scroll(dir)}
+                style={{ width: 40, height: 40, borderRadius: 999, border: "1.5px solid var(--border-default)", background: "var(--surface-card)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-700)", transition: "background .15s" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "var(--brand)"; (e.currentTarget as HTMLElement).style.color = "#fff"; (e.currentTarget as HTMLElement).style.borderColor = "var(--brand)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "var(--surface-card)"; (e.currentTarget as HTMLElement).style.color = "var(--ink-700)"; (e.currentTarget as HTMLElement).style.borderColor = "var(--border-default)"; }}>
+                {icon}
+              </button>
+            ))}
+          </div>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {pros.map((pro, i) => <ProCard key={pro.id} pro={pro} index={i} />)}
+        <div ref={ref} data-carousel="" style={{ display: "flex", gap: 20, overflowX: "auto", paddingBottom: 8 }}>
+          {FALLBACK.map(pro => <ProCard key={pro.id} pro={pro} />)}
         </div>
       </div>
     </section>

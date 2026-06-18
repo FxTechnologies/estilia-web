@@ -1,12 +1,12 @@
-import { Navbar }              from "@/components/Navbar";
-import { Hero }                from "@/components/Hero";
-import { FeaturedBusinesses }  from "@/components/FeaturedBusinesses";
-import { Services }            from "@/components/Services";
-import { HowItWorks }          from "@/components/HowItWorks";
-import { ForPros }             from "@/components/ForPros";
-import { Testimonials }        from "@/components/Testimonials";
-import { AppDownload }         from "@/components/AppDownload";
-import { Footer }              from "@/components/Footer";
+import { Navbar }             from "@/components/Navbar";
+import { Hero }               from "@/components/Hero";
+import { TrustStrip }         from "@/components/TrustStrip";
+import { Categories }         from "@/components/Categories";
+import { FeaturedBusinesses } from "@/components/FeaturedBusinesses";
+import { AppDownloadBanner }  from "@/components/AppDownloadBanner";
+import { Testimonials }       from "@/components/Testimonials";
+import { ForBusiness }        from "@/components/ForBusiness";
+import { Footer }             from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -14,12 +14,12 @@ export default function Home() {
       <Navbar />
       <main>
         <Hero />
+        <TrustStrip />
+        <Categories />
         <FeaturedBusinesses />
-        <Services />
-        <HowItWorks />
-        <ForPros />
+        <AppDownloadBanner />
         <Testimonials />
-        <AppDownload />
+        <ForBusiness />
       </main>
       <Footer />
     </>
