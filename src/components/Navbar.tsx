@@ -2,6 +2,59 @@
 import { useState } from "react";
 import { Menu, X, MapPin, ChevronDown } from "lucide-react";
 
+function AnimatedLogo() {
+  return (
+    <div style={{ width: 34, height: 34, borderRadius: 10, background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+      <style>{`
+        @keyframes estilia-line1 {
+          0%,100% { stroke-dashoffset: 0; opacity: 1; }
+          40%      { stroke-dashoffset: -36; opacity: 0; }
+          41%      { stroke-dashoffset: 36; opacity: 0; }
+          70%      { stroke-dashoffset: 0; opacity: 1; }
+        }
+        @keyframes estilia-line2 {
+          0%,100% { stroke-dashoffset: 0; opacity: 1; }
+          50%      { stroke-dashoffset: -24; opacity: 0; }
+          51%      { stroke-dashoffset: 24; opacity: 0; }
+          78%      { stroke-dashoffset: 0; opacity: 1; }
+        }
+        @keyframes estilia-line3 {
+          0%,100% { stroke-dashoffset: 0; opacity: 1; }
+          60%      { stroke-dashoffset: -36; opacity: 0; }
+          61%      { stroke-dashoffset: 36; opacity: 0; }
+          86%      { stroke-dashoffset: 0; opacity: 1; }
+        }
+        @keyframes estilia-dot {
+          0%,35%,100% { r: 5; opacity: 1; }
+          50%          { r: 7; opacity: 0.7; }
+          65%          { r: 3; opacity: 1; }
+        }
+        .estilia-l1 {
+          stroke-dasharray: 36; stroke-dashoffset: 0;
+          animation: estilia-line1 3.6s ease-in-out infinite;
+        }
+        .estilia-l2 {
+          stroke-dasharray: 24; stroke-dashoffset: 0;
+          animation: estilia-line2 3.6s ease-in-out 0.15s infinite;
+        }
+        .estilia-l3 {
+          stroke-dasharray: 36; stroke-dashoffset: 0;
+          animation: estilia-line3 3.6s ease-in-out 0.3s infinite;
+        }
+        .estilia-dot {
+          animation: estilia-dot 3.6s ease-in-out infinite;
+        }
+      `}</style>
+      <svg width="18" height="18" viewBox="0 0 64 64" fill="none">
+        <line className="estilia-l1" x1="14" y1="18" x2="50" y2="18" stroke="white" strokeWidth="5.5" strokeLinecap="round"/>
+        <line className="estilia-l2" x1="14" y1="32" x2="38" y2="32" stroke="white" strokeWidth="5.5" strokeLinecap="round"/>
+        <line className="estilia-l3" x1="14" y1="46" x2="50" y2="46" stroke="white" strokeWidth="5.5" strokeLinecap="round"/>
+        <circle className="estilia-dot" cx="53" cy="18" r="5" fill="#d3b87f"/>
+      </svg>
+    </div>
+  );
+}
+
 const NAV = [
   { label: "Explorar",        href: "/buscar" },
   { label: "Categorías",      href: "/#categorias" },
@@ -26,17 +79,7 @@ export function Navbar() {
       }}>
         {/* Logo */}
         <a href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0 }}>
-          <div style={{
-            width: 34, height: 34, borderRadius: 10,
-            background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <svg width="18" height="18" viewBox="0 0 64 64" fill="none">
-              <line x1="14" y1="18" x2="50" y2="18" stroke="white" strokeWidth="5.5" strokeLinecap="round"/>
-              <line x1="14" y1="32" x2="38" y2="32" stroke="white" strokeWidth="5.5" strokeLinecap="round"/>
-              <line x1="14" y1="46" x2="50" y2="46" stroke="white" strokeWidth="5.5" strokeLinecap="round"/>
-              <circle cx="53" cy="18" r="5" fill="#d3b87f"/>
-            </svg>
-          </div>
+          <AnimatedLogo />
           <span style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, color: "var(--ink-900)", letterSpacing: "-0.01em" }}>
             Estilia
           </span>
