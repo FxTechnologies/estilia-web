@@ -554,7 +554,7 @@ export default function NegocioDashboard() {
           <Sparkles size={20} style={{ color: "#2b1e0a" }} />
           <h4 style={{ fontSize: 14, fontWeight: 800, color: "#2b1e0a", margin: "8px 0 3px" }}>Pásate a Premium</h4>
           <p style={{ fontSize: 11.5, color: "rgba(43,30,10,0.75)", margin: "0 0 11px", lineHeight: 1.4 }}>Mejor posición y anuncios destacados dentro de la app.</p>
-          <button onClick={() => toast("Ver planes Premium")} style={{ width: "100%", height: 34, borderRadius: 8, border: "none", background: "#2b1e0a", color: "var(--gold-300)", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>Mejorar plan</button>
+          <button onClick={() => { window.location.href = "/dashboard/premium"; }} style={{ width: "100%", height: 34, borderRadius: 8, border: "none", background: "#2b1e0a", color: "var(--gold-300)", fontSize: 12.5, fontWeight: 700, cursor: "pointer" }}>Mejorar plan</button>
         </div>
       </aside>
 
