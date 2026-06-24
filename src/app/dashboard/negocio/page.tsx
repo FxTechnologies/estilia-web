@@ -5,7 +5,7 @@ import {
   LayoutPanelLeft, Scissors, Megaphone, Users, Calendar, Star,
   ChevronsUpDown, Sparkles, Search, Bell, Plus, PencilRuler, ExternalLink,
   Image as ImageIcon, Pencil, MapPin, Phone, AtSign, Check, Clock,
-  Trash2, Eye, CalendarCheck, UserPlus, MessageCircle, Store, Palette,
+  Trash2, CalendarCheck, UserPlus, MessageCircle, Store, Palette,
   Brush, X, BarChart3, Users2, ArrowLeft, Smartphone, BadgeCheck,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase-browser";
@@ -25,27 +25,36 @@ interface ServiceRow {
 }
 
 interface Promo {
-  id: number;
+  id: string;
   title: string;
-  type: string;
-  value: string;
-  applies: string;
-  start: string;
-  end: string;
+  description: string | null;
+  discount_type: "percentage" | "fixed" | null;
+  discount_value: number | null;
+  valid_until: string | null;
   active: boolean;
-  views: number;
-  books: number;
 }
 
 interface TeamMember {
-  id: number;
+  id: string;
   name: string;
   role: string;
-  group: string;
-  specialties: string[];
-  rating: number;
-  available: boolean;
+  image_url: string | null;
+  bio: string | null;
+  service_ids: string[];
 }
+
+type StaffRow = {
+  id: string; name: string; role: string;
+  image_url: string | null; bio: string | null;
+  service_staff?: { service_id: string }[];
+};
+
+type BizRow = {
+  id: string;
+  name: string | null; category: string | null; bio: string | null;
+  whatsapp: string | null; instagram: string | null; address: string | null;
+  image_url: string | null; rating: number | null; review_count: number | null;
+};
 
 interface FormState {
   svcTitle?: string;
@@ -55,17 +64,14 @@ interface FormState {
   svcDesc?: string;
   svcActive?: boolean;
   promoTitle?: string;
-  promoType?: string;
+  promoDesc?: string;
+  promoType?: "percentage" | "fixed";
   promoValue?: string;
-  promoApplies?: string;
-  promoStart?: string;
-  promoEnd?: string;
+  promoUntil?: string;
   promoActive?: boolean;
   tmName?: string;
   tmRole?: string;
-  tmGroup?: string;
-  tmSpecs?: string[];
-  tmAvailable?: boolean;
+  tmServiceIds?: string[];
 }
 
 type ModalType = "service" | "promo" | "team" | null;
@@ -73,24 +79,6 @@ type View = "perfil" | "servicios" | "anuncios" | "equipo" | "agenda" | "cliente
 type Layout = "A" | "B";
 
 // ─── Seed data ────────────────────────────────────────────────────────────────
-
-const SEED_PROMOS: Promo[] = [
-  { id: 1, title: "20% en tu primer corte", type: "Descuento", value: "20%", applies: "Clientes nuevos", start: "1 jun", end: "30 jun", active: true, views: 1240, books: 86 },
-  { id: 2, title: "Martes de barba 2x1", type: "2x1", value: "2x1", applies: "Barba & afeitado", start: "24 jun", end: "31 jul", active: true, views: 0, books: 0 },
-  { id: 3, title: "Combo novio: corte + barba + facial", type: "Combo", value: "L 650", applies: "Combo", start: "1 jun", end: "15 jul", active: true, views: 612, books: 34 },
-  { id: 4, title: "Perfil destacado · Semana de bodas", type: "Perfil destacado", value: "Campaña", applies: "Perfil", start: "10 jun", end: "17 jun", active: false, views: 4300, books: 120 },
-];
-
-const SEED_TEAM: TeamMember[] = [
-  { id: 1, name: "José Banegas", role: "Barbero senior", group: "cortes", specialties: ["Fade", "Diseño", "Barba"], rating: 4.9, available: true },
-  { id: 2, name: "Luis Cárcamo", role: "Barbero", group: "cortes", specialties: ["Corte clásico", "Barba"], rating: 4.7, available: true },
-  { id: 3, name: "Marvin Cálix", role: "Barbero junior", group: "cortes", specialties: ["Corte clásico", "Fade"], rating: 4.6, available: true },
-  { id: 4, name: "Andrea Maradiaga", role: "Colorista", group: "color", specialties: ["Balayage", "Mechas", "Keratina", "Coloración"], rating: 4.9, available: true },
-  { id: 5, name: "Daniela Pineda", role: "Barbera", group: "barba", specialties: ["Afeitado a navaja", "Barba", "Diseño"], rating: 4.8, available: false },
-  { id: 6, name: "Sofía Discua", role: "Esteticista", group: "estetica", specialties: ["Facial", "Cejas & pestañas"], rating: 5.0, available: true },
-];
-
-const SPEC_MASTER = ["Fade", "Corte clásico", "Diseño", "Barba", "Afeitado a navaja", "Coloración", "Balayage", "Mechas", "Keratina", "Facial", "Cejas & pestañas", "Maquillaje"];
 
 const CATS = ["Barbería", "Color", "Barba & afeitado", "Spa & facial"];
 
@@ -101,16 +89,9 @@ const CAT_ICON: Record<string, React.ReactNode> = {
   "Spa & facial": <Sparkles size={17} />,
 };
 
-const GROUP_CFG = [
-  { key: "cortes", label: "Cortes & Fade", icon: <Scissors size={17} /> },
-  { key: "color", label: "Color & tratamientos", icon: <Palette size={17} /> },
-  { key: "barba", label: "Barba & afeitado", icon: <Brush size={17} /> },
-  { key: "estetica", label: "Estética & facial", icon: <Sparkles size={17} /> },
-];
-
 const STATUS_PAL: Record<string, [string, string]> = {
   "Activa": ["var(--success-100)", "var(--success-500)"],
-  "Programada": ["#e0f0ff", "#1d6fad"],
+  "Vencida": ["#fde8e8", "var(--danger-500)"],
   "Pausada": ["var(--ink-100)", "var(--ink-500)"],
 };
 
@@ -120,16 +101,23 @@ function getInitials(name: string) {
   return name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 }
 
-function bannerOf(type: string) {
-  if (type === "2x1") return "linear-gradient(120deg,#9a6910,var(--gold-500))";
-  if (type === "Combo") return "linear-gradient(120deg,#8b1d3a,#c94466)";
-  if (type === "Perfil destacado") return "linear-gradient(120deg,var(--ink-800),var(--plum-700))";
-  return "linear-gradient(120deg,var(--plum-700),var(--plum-500))";
+function bannerOf(type: Promo["discount_type"]) {
+  return type === "fixed" ? "linear-gradient(120deg,#9a6910,var(--gold-500))" : "linear-gradient(120deg,var(--plum-700),var(--plum-500))";
+}
+
+function discountLabel(p: Promo) {
+  if (p.discount_value == null) return "Promo";
+  return p.discount_type === "fixed" ? `L ${p.discount_value.toLocaleString("es-HN")}` : `${p.discount_value}%`;
+}
+
+function fmtDate(d: string | null) {
+  if (!d) return "Sin vencimiento";
+  return new Date(d).toLocaleDateString("es-HN", { day: "numeric", month: "short", year: "numeric" });
 }
 
 function promoStatus(p: Promo) {
   if (!p.active) return "Pausada";
-  if (/jul|ago/.test(p.start)) return "Programada";
+  if (p.valid_until && new Date(p.valid_until) < new Date()) return "Vencida";
   return "Activa";
 }
 
@@ -204,12 +192,13 @@ export default function NegocioDashboard() {
   const [view, setViewState] = useState<View>("perfil");
   const [layout, setLayout] = useState<Layout>("A");
   const [svcFilter, setSvcFilter] = useState("Todos");
-  const [teamFilter, setTeamFilter] = useState("Todos");
   const [services, setServices] = useState<ServiceRow[]>([]);
-  const [promos, setPromos] = useState<Promo[]>(SEED_PROMOS);
-  const [team, setTeam] = useState<TeamMember[]>(SEED_TEAM);
-  const [seq, setSeq] = useState(200);
+  const [promos, setPromos] = useState<Promo[]>([]);
+  const [team, setTeam] = useState<TeamMember[]>([]);
   const [proId, setProId] = useState<string | null>(null);
+  const [bizRow, setBizRow] = useState<BizRow | null>(null);
+  const [profileForm, setProfileForm] = useState({ name: "", category: "", bio: "", whatsapp: "", instagram: "", address: "" });
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const [modalType, setModalType] = useState<ModalType>(null);
   const [editingId, setEditingId] = useState<string | number | null>(null);
@@ -233,11 +222,27 @@ export default function NegocioDashboard() {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: pro } = await supabase.from("pros").select("id").eq("user_id", user.id).maybeSingle();
+      const { data: pro } = await supabase.from("pros").select("*").eq("user_id", user.id).maybeSingle();
       if (!pro) return;
       setProId(pro.id);
+      setBizRow(pro);
+      setProfileForm({
+        name: pro.name || "", category: pro.category || "", bio: pro.bio || "",
+        whatsapp: pro.whatsapp || "", instagram: pro.instagram || "", address: pro.address || "",
+      });
       const { data: svcs } = await supabase.from("services").select("*").eq("pro_id", pro.id);
       if (svcs) setServices(svcs.map((s) => ({ ...s, active: true, cat: "Barbería" })));
+      const { data: staffRows } = await supabase
+        .from("staff")
+        .select("*, service_staff(service_id)")
+        .eq("pro_id", pro.id)
+        .order("created_at");
+      if (staffRows) setTeam((staffRows as StaffRow[]).map((m) => ({
+        id: m.id, name: m.name, role: m.role, image_url: m.image_url, bio: m.bio,
+        service_ids: (m.service_staff ?? []).map((r) => r.service_id),
+      })));
+      const { data: proms } = await supabase.from("promotions").select("*").eq("pro_id", pro.id).order("created_at", { ascending: false });
+      if (proms) setPromos(proms as Promo[]);
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -266,6 +271,23 @@ export default function NegocioDashboard() {
 
   const toggleService = (id: string) => setServices((prev) => prev.map((x) => x.id === id ? { ...x, active: !x.active } : x));
 
+  // ── perfil del negocio (pros) ──────────────────────────────────────────────────
+  const saveProfile = async () => {
+    if (!proId) { toast("No se encontró tu negocio"); return; }
+    if (!profileForm.name.trim()) { toast("Ponle nombre a tu negocio"); return; }
+    setSavingProfile(true);
+    const payload = {
+      name: profileForm.name.trim(), category: profileForm.category.trim(),
+      bio: profileForm.bio.trim(), whatsapp: profileForm.whatsapp.trim(),
+      instagram: profileForm.instagram.trim(), address: profileForm.address.trim(),
+    };
+    const { error } = await supabase.from("pros").update(payload).eq("id", proId);
+    setSavingProfile(false);
+    if (error) { toast("No se pudo guardar"); return; }
+    setBizRow((r) => (r ? { ...r, ...payload } : r));
+    toast("Perfil actualizado");
+  };
+
   // ── modal open/close ─────────────────────────────────────────────────────────
   const openModal = (type: ModalType, item?: ServiceRow | Promo | TeamMember) => {
     let f: FormState = {};
@@ -275,12 +297,12 @@ export default function NegocioDashboard() {
              : { svcTitle: "", svcCat: "Barbería", svcDur: "30", svcPrice: "", svcDesc: "", svcActive: true };
     } else if (type === "promo") {
       const p = item as Promo | undefined;
-      f = p ? { promoTitle: p.title, promoType: p.type, promoValue: p.value, promoApplies: p.applies, promoStart: p.start, promoEnd: p.end, promoActive: p.active }
-             : { promoTitle: "", promoType: "Descuento", promoValue: "", promoApplies: "Todos los servicios", promoStart: "", promoEnd: "", promoActive: true };
+      f = p ? { promoTitle: p.title, promoDesc: p.description ?? "", promoType: p.discount_type ?? "percentage", promoValue: p.discount_value != null ? String(p.discount_value) : "", promoUntil: p.valid_until ?? "", promoActive: p.active }
+             : { promoTitle: "", promoDesc: "", promoType: "percentage", promoValue: "", promoUntil: "", promoActive: true };
     } else if (type === "team") {
       const m = item as TeamMember | undefined;
-      f = m ? { tmName: m.name, tmRole: m.role, tmGroup: m.group, tmSpecs: [...m.specialties], tmAvailable: m.available }
-             : { tmName: "", tmRole: "", tmGroup: "cortes", tmSpecs: [], tmAvailable: true };
+      f = m ? { tmName: m.name, tmRole: m.role, tmServiceIds: [...m.service_ids] }
+             : { tmName: "", tmRole: "", tmServiceIds: [] };
     }
     setForm(f);
     setEditingId(item ? (item as { id: string | number }).id : null);
@@ -289,26 +311,73 @@ export default function NegocioDashboard() {
 
   const closeModal = () => { setModalType(null); setEditingId(null); };
 
-  const savePromo = () => {
+  const savePromo = async () => {
     if (!form.promoTitle?.trim()) { toast("Ponle un título al anuncio"); return; }
-    const id = (editingId as number | null) || seq + 1;
-    const prev = promos.find((x) => x.id === id);
-    const obj: Promo = { id, title: form.promoTitle!.trim(), type: form.promoType || "Descuento", value: form.promoValue || "—", applies: form.promoApplies || "Todos los servicios", start: form.promoStart || "Hoy", end: form.promoEnd || "—", active: !!form.promoActive, views: prev?.views || 0, books: prev?.books || 0 };
-    setPromos((p) => prev ? p.map((x) => x.id === id ? obj : x) : [...p, obj]);
-    if (!prev) setSeq((s) => Math.max(s, id));
+    if (!proId) { toast("No se encontró tu negocio"); return; }
+    const val = form.promoValue ? parseFloat(form.promoValue) : null;
+    const payload = {
+      title: form.promoTitle.trim(),
+      description: form.promoDesc?.trim() || null,
+      discount_type: val != null ? (form.promoType || "percentage") : null,
+      discount_value: val,
+      valid_until: form.promoUntil || null,
+      active: !!form.promoActive,
+    };
+    if (editingId) {
+      const id = editingId as string;
+      const { data } = await supabase.from("promotions").update(payload).eq("id", id).select().single();
+      if (data) setPromos((p) => p.map((x) => x.id === id ? (data as Promo) : x));
+      toast("Anuncio actualizado");
+    } else {
+      const { data, error } = await supabase.from("promotions").insert({ ...payload, pro_id: proId }).select().single();
+      if (error || !data) { toast("No se pudo guardar"); return; }
+      setPromos((p) => [data as Promo, ...p]);
+      toast("Anuncio publicado");
+    }
     setModalType(null); setEditingId(null);
-    toast(editingId ? "Anuncio actualizado" : "Anuncio publicado");
   };
 
-  const saveTeam = () => {
+  const togglePromo = async (p: Promo) => {
+    const { data } = await supabase.from("promotions").update({ active: !p.active }).eq("id", p.id).select().single();
+    if (data) setPromos((prev) => prev.map((x) => x.id === p.id ? (data as Promo) : x));
+  };
+
+  const deletePromo = async (id: string) => {
+    await supabase.from("promotions").delete().eq("id", id);
+    setPromos((prev) => prev.filter((x) => x.id !== id));
+    toast("Anuncio eliminado");
+  };
+
+  const saveTeam = async () => {
     if (!form.tmName?.trim()) { toast("Escribe el nombre del miembro"); return; }
-    const id = (editingId as number | null) || seq + 1;
-    const prev = team.find((x) => x.id === id);
-    const obj: TeamMember = { id, name: form.tmName!.trim(), role: form.tmRole || "Especialista", group: form.tmGroup || "cortes", specialties: (form.tmSpecs && form.tmSpecs.length) ? form.tmSpecs : ["General"], rating: 5.0, available: !!form.tmAvailable };
-    setTeam((t) => prev ? t.map((x) => x.id === id ? obj : x) : [...t, obj]);
-    if (!prev) setSeq((s) => Math.max(s, id));
+    if (!proId) { toast("No se encontró tu negocio"); return; }
+    const wantIds = form.tmServiceIds || [];
+    const fields = { name: form.tmName.trim(), role: form.tmRole?.trim() || "Especialista" };
+
+    if (editingId) {
+      const id = editingId as string;
+      await supabase.from("staff").update(fields).eq("id", id);
+      const prevIds = team.find((x) => x.id === id)?.service_ids || [];
+      const toAdd = wantIds.filter((s) => !prevIds.includes(s));
+      const toRemove = prevIds.filter((s) => !wantIds.includes(s));
+      if (toAdd.length) await supabase.from("service_staff").insert(toAdd.map((service_id) => ({ staff_id: id, service_id })));
+      for (const service_id of toRemove) await supabase.from("service_staff").delete().eq("staff_id", id).eq("service_id", service_id);
+      setTeam((t) => t.map((x) => x.id === id ? { ...x, ...fields, service_ids: wantIds } : x));
+      toast("Miembro actualizado");
+    } else {
+      const { data, error } = await supabase.from("staff").insert({ ...fields, pro_id: proId }).select().single();
+      if (error || !data) { toast("No se pudo guardar"); return; }
+      if (wantIds.length) await supabase.from("service_staff").insert(wantIds.map((service_id) => ({ staff_id: data.id, service_id })));
+      setTeam((t) => [...t, { id: data.id, name: data.name, role: data.role, image_url: data.image_url, bio: data.bio, service_ids: wantIds }]);
+      toast("Miembro agregado al equipo");
+    }
     setModalType(null); setEditingId(null);
-    toast(editingId ? "Miembro actualizado" : "Miembro agregado al equipo");
+  };
+
+  const deleteTeam = async (id: string) => {
+    await supabase.from("staff").delete().eq("id", id);
+    setTeam((prev) => prev.filter((x) => x.id !== id));
+    toast("Miembro eliminado");
   };
 
   const onSave = () => {
@@ -317,10 +386,11 @@ export default function NegocioDashboard() {
     else if (modalType === "team") saveTeam();
   };
 
-  const toggleSpec = (name: string) => {
-    const cur = form.tmSpecs || [];
-    upd("tmSpecs", cur.includes(name) ? cur.filter((x) => x !== name) : [...cur, name]);
+  const toggleTmService = (id: string) => {
+    const cur = form.tmServiceIds || [];
+    upd("tmServiceIds", cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
   };
+  const serviceName = (id: string) => services.find((s) => s.id === id)?.name || "Servicio";
 
   // ── derived ──────────────────────────────────────────────────────────────────
   const titleMap: Record<string, [string, string]> = {
@@ -334,24 +404,24 @@ export default function NegocioDashboard() {
   };
   const [pageTitle, pageSubtitle] = titleMap[view] || ["Estilia", ""];
 
-  type PrimaryAction = [string, React.ReactNode, () => void];
-  const primaryActionMap: Record<string, PrimaryAction> = {
-    perfil: ["Ver perfil público", <ExternalLink key="ep" size={18} />, () => toast("Abriendo tu perfil público…")],
-    servicios: ["Agregar servicio", <Plus key="pl" size={18} />, () => openModal("service")],
-    anuncios: ["Crear anuncio", <Plus key="pl" size={18} />, () => openModal("promo")],
-    equipo: ["Agregar miembro", <UserPlus key="up" size={18} />, () => openModal("team")],
+  const primaryActionMeta: Record<string, [string, React.ReactNode]> = {
+    perfil: ["Ver perfil público", <ExternalLink key="ep" size={18} />],
+    servicios: ["Agregar servicio", <Plus key="pl" size={18} />],
+    anuncios: ["Crear anuncio", <Plus key="pl" size={18} />],
+    equipo: ["Agregar miembro", <UserPlus key="up" size={18} />],
   };
-  const [paLabel, paIcon, paAction] = primaryActionMap[view] || ["Nuevo", <Plus key="pl" size={18} />, () => {}];
+  const [paLabel, paIcon] = primaryActionMeta[view] || ["Nuevo", <Plus key="pl" size={18} />];
+  const runPrimaryAction = () => {
+    if (view === "perfil") toast("Abriendo tu perfil público…");
+    else if (view === "servicios") openModal("service");
+    else if (view === "anuncios") openModal("promo");
+    else if (view === "equipo") openModal("team");
+  };
 
   const visibleCats = svcFilter === "Todos" ? CATS : [svcFilter];
   const serviceGroups = visibleCats.map((c) => ({ cat: c, icon: CAT_ICON[c] || <Scissors size={17} />, items: services.filter((x) => x.cat === c) })).filter((g) => g.items.length > 0);
 
   const activos = promos.filter((p) => p.active).length;
-  const totalViews = promos.reduce((a, p) => a + p.views, 0);
-  const totalBooks = promos.reduce((a, p) => a + p.books, 0);
-
-  const visGroups = GROUP_CFG.filter((g) => teamFilter === "Todos" || teamFilter === g.label);
-  const teamSections = visGroups.map((g) => ({ ...g, members: team.filter((x) => x.group === g.key) })).filter((g) => g.members.length > 0);
 
   const checks = [
     { label: "Foto de portada", done: true }, { label: "Descripción del negocio", done: true },
@@ -364,12 +434,18 @@ export default function NegocioDashboard() {
   const fromPrice = activePrices.length ? Math.min(...activePrices).toLocaleString("es-HN") : "0";
 
   const business = {
-    name: "Urban Fade Barber Shop", initials: "UF", plan: "Negocio", category: "Barbería",
-    rating: "4.9", reviews: 212,
-    cover: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=1100&q=80&auto=format&fit=crop",
-    about: "Un espacio donde el estilo masculino se encuentra con el cuidado de detalle. Nuestro equipo de barberos certificados combina técnica, productos premium y un ambiente cálido en el corazón de Tegucigalpa.",
+    name: bizRow?.name || "Tu negocio",
+    initials: getInitials(bizRow?.name || "Mi Negocio"),
+    plan: "Negocio",
+    category: bizRow?.category || "Sin categoría",
+    rating: bizRow?.rating ? String(bizRow.rating) : "Nuevo",
+    reviews: bizRow?.review_count ?? 0,
+    cover: bizRow?.image_url || "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=1100&q=80&auto=format&fit=crop",
+    about: bizRow?.bio || "Aún no has agregado una descripción de tu negocio.",
     specialties: ["Fade", "Barba", "Diseño", "Coloración", "Afeitado a navaja"],
-    phone: "+504 9876-5432", instagram: "@urbanfade.hn", address: "Col. Palmira, Tegucigalpa",
+    phone: bizRow?.whatsapp || "—",
+    instagram: bizRow?.instagram || "—",
+    address: bizRow?.address || "—",
   };
 
   const gallery = [
@@ -489,7 +565,7 @@ export default function NegocioDashboard() {
               <Bell size={19} style={{ color: "var(--ink-700)" }} />
               <span style={{ position: "absolute", top: 9, right: 10, width: 8, height: 8, borderRadius: "50%", background: "var(--danger-500)", border: "2px solid #fff" }} />
             </button>
-            <button onClick={paAction} style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 42, padding: "0 18px", borderRadius: 10, background: "var(--brand)", color: "#fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)" }}>
+            <button onClick={runPrimaryAction} style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 42, padding: "0 18px", borderRadius: 10, background: "var(--brand)", color: "#fff", border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)" }}>
               {paIcon}{paLabel}
             </button>
           </div>
@@ -641,10 +717,16 @@ export default function NegocioDashboard() {
                       <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--ink-900)", margin: 0 }}>Identidad del negocio</h3>
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                      <label style={{ display: "block" }}><span style={FIELD_LABEL}>Nombre</span><input defaultValue={business.name} style={FIELD_INPUT} /></label>
-                      <label style={{ display: "block" }}><span style={FIELD_LABEL}>Categoría</span><input defaultValue={business.category} style={FIELD_INPUT} /></label>
-                      <label style={{ display: "block", gridColumn: "1 / -1" }}><span style={FIELD_LABEL}>Descripción</span><textarea defaultValue={business.about} style={FIELD_TEXTAREA} /></label>
+                      <label style={{ display: "block" }}><span style={FIELD_LABEL}>Nombre</span><input value={profileForm.name} onChange={(e) => setProfileForm((f) => ({ ...f, name: e.target.value }))} style={FIELD_INPUT} /></label>
+                      <label style={{ display: "block" }}><span style={FIELD_LABEL}>Categoría</span><input value={profileForm.category} onChange={(e) => setProfileForm((f) => ({ ...f, category: e.target.value }))} style={FIELD_INPUT} /></label>
+                      <label style={{ display: "block", gridColumn: "1 / -1" }}><span style={FIELD_LABEL}>Descripción</span><textarea value={profileForm.bio} onChange={(e) => setProfileForm((f) => ({ ...f, bio: e.target.value }))} style={FIELD_TEXTAREA} /></label>
+                      <label style={{ display: "block" }}><span style={FIELD_LABEL}>WhatsApp</span><input value={profileForm.whatsapp} onChange={(e) => setProfileForm((f) => ({ ...f, whatsapp: e.target.value }))} placeholder="50412345678" style={FIELD_INPUT} /></label>
+                      <label style={{ display: "block" }}><span style={FIELD_LABEL}>Instagram</span><input value={profileForm.instagram} onChange={(e) => setProfileForm((f) => ({ ...f, instagram: e.target.value }))} placeholder="@tunegocio" style={FIELD_INPUT} /></label>
+                      <label style={{ display: "block", gridColumn: "1 / -1" }}><span style={FIELD_LABEL}>Dirección</span><input value={profileForm.address} onChange={(e) => setProfileForm((f) => ({ ...f, address: e.target.value }))} placeholder="Col. Palmira, Tegucigalpa" style={FIELD_INPUT} /></label>
                     </div>
+                    <button onClick={saveProfile} disabled={savingProfile} style={{ marginTop: 18, height: 46, padding: "0 20px", borderRadius: 10, border: "none", background: "var(--brand)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: savingProfile ? "default" : "pointer", opacity: savingProfile ? 0.7 : 1, boxShadow: "var(--shadow-brand)", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                      <Check size={17} />{savingProfile ? "Guardando…" : "Guardar cambios"}
+                    </button>
                   </div>
                   {/* Especialidades editor */}
                   <div style={CARD}>
@@ -779,11 +861,10 @@ export default function NegocioDashboard() {
         {/* ════ ANUNCIOS ══════════════════════════════════════════════════════ */}
         {view === "anuncios" && (
           <div style={{ padding: "26px 32px 56px" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16, marginBottom: 22 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16, marginBottom: 22 }}>
               {[
                 { value: String(activos), label: "Anuncios activos", icon: <Megaphone size={21} />, iconBg: "var(--surface-plum)", iconColor: "var(--brand)" },
-                { value: totalViews.toLocaleString("es-HN"), label: "Vistas totales", icon: <Eye size={21} />, iconBg: "rgba(194,161,92,0.12)", iconColor: "var(--gold-500)" },
-                { value: String(totalBooks), label: "Reservas generadas", icon: <CalendarCheck size={21} />, iconBg: "var(--success-100)", iconColor: "var(--success-500)" },
+                { value: String(promos.length), label: "Anuncios totales", icon: <CalendarCheck size={21} />, iconBg: "var(--success-100)", iconColor: "var(--success-500)" },
               ].map((ps, i) => (
                 <div key={i} style={{ ...CARD, padding: "18px 20px", display: "flex", alignItems: "center", gap: 14 }}>
                   <span style={{ width: 44, height: 44, borderRadius: 10, background: ps.iconBg, display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}><span style={{ color: ps.iconColor }}>{ps.icon}</span></span>
@@ -798,16 +879,22 @@ export default function NegocioDashboard() {
               <h3 style={{ fontSize: 17, fontWeight: 800, color: "var(--ink-900)", margin: 0 }}>Tus anuncios <span style={{ color: "var(--ink-400)", fontWeight: 600 }}>· {promos.length}</span></h3>
               <button onClick={() => openModal("promo")} style={{ display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 16px", borderRadius: 10, border: "none", background: "var(--brand)", color: "#fff", fontSize: 13.5, fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)" }}><Plus size={17} />Crear anuncio</button>
             </div>
+            {promos.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 0", color: "var(--ink-400)" }}>
+                <Megaphone size={40} style={{ marginBottom: 12, opacity: 0.4 }} />
+                <p style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Aún no tienes anuncios</p>
+              </div>
+            ) : (
             <div style={{ display: "grid", gap: 14 }}>
               {promos.map((p) => {
                 const st = promoStatus(p);
                 const pal = STATUS_PAL[st] || STATUS_PAL["Activa"];
                 return (
-                  <div key={p.id} style={{ ...CARD, padding: 0, overflow: "hidden", display: "flex", alignItems: "stretch", opacity: p.active ? 1 : 0.7, border: p.type === "Perfil destacado" ? "1px solid var(--gold-300)" : "1px solid var(--border-subtle)" }}>
-                    <div style={{ width: 200, flexShrink: 0, background: bannerOf(p.type), padding: 20, display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative", overflow: "hidden" }}>
+                  <div key={p.id} style={{ ...CARD, padding: 0, overflow: "hidden", display: "flex", alignItems: "stretch", opacity: p.active ? 1 : 0.7, border: "1px solid var(--border-subtle)" }}>
+                    <div style={{ width: 200, flexShrink: 0, background: bannerOf(p.discount_type), padding: 20, display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative", overflow: "hidden" }}>
                       <Sparkles size={60} style={{ position: "absolute", top: -8, right: -8, color: "rgba(255,255,255,0.16)" }} />
-                      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "rgba(255,255,255,0.82)", position: "relative" }}>{p.type}</span>
-                      <div style={{ fontFamily: "var(--font-display)", fontSize: 34, fontWeight: 700, color: "#fff", lineHeight: 1, position: "relative" }}>{p.value}</div>
+                      <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "rgba(255,255,255,0.82)", position: "relative" }}>{p.discount_type === "fixed" ? "Monto fijo" : p.discount_value != null ? "Descuento" : "Anuncio"}</span>
+                      <div style={{ fontFamily: "var(--font-display)", fontSize: 34, fontWeight: 700, color: "#fff", lineHeight: 1, position: "relative" }}>{discountLabel(p)}</div>
                     </div>
                     <div style={{ flex: 1, minWidth: 0, padding: "18px 22px", display: "flex", flexDirection: "column", gap: 8 }}>
                       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
@@ -816,19 +903,17 @@ export default function NegocioDashboard() {
                             <span style={{ fontSize: 16, fontWeight: 800, color: "var(--ink-900)" }}>{p.title}</span>
                             <span style={{ padding: "4px 11px", borderRadius: 999, fontSize: 11.5, fontWeight: 700, background: pal[0], color: pal[1] }}>{st}</span>
                           </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 6, fontSize: 13, color: "var(--ink-500)", flexWrap: "wrap" }}>
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Scissors size={14} />{p.applies}</span>
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Calendar size={14} />{p.start} – {p.end}</span>
+                          {p.description ? <p style={{ fontSize: 13.5, color: "var(--ink-600)", margin: "6px 0 0", lineHeight: 1.5 }}>{p.description}</p> : null}
+                          <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 8, fontSize: 13, color: "var(--ink-500)", flexWrap: "wrap" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><Calendar size={14} />Vence: {fmtDate(p.valid_until)}</span>
                           </div>
                         </div>
-                        <Switch checked={p.active} onChange={() => setPromos((prev) => prev.map((x) => x.id === p.id ? { ...x, active: !x.active } : x))} />
+                        <Switch checked={p.active} onChange={() => togglePromo(p)} />
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 24, marginTop: "auto", paddingTop: 10 }}>
-                        <div style={{ display: "inline-flex", alignItems: "center", gap: 7 }}><Eye size={16} style={{ color: "var(--ink-400)" }} /><span style={{ fontSize: 13.5, color: "var(--ink-600)" }}><b style={{ color: "var(--ink-900)" }}>{p.views.toLocaleString("es-HN")}</b> vistas</span></div>
-                        <div style={{ display: "inline-flex", alignItems: "center", gap: 7 }}><CalendarCheck size={16} style={{ color: "var(--ink-400)" }} /><span style={{ fontSize: 13.5, color: "var(--ink-600)" }}><b style={{ color: "var(--ink-900)" }}>{p.books}</b> reservas</span></div>
+                      <div style={{ display: "flex", alignItems: "center", marginTop: "auto", paddingTop: 10 }}>
                         <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
                           <button onClick={() => openModal("promo", p)} style={{ width: 34, height: 34, borderRadius: 8, border: "1px solid var(--border-default)", background: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><Pencil size={15} style={{ color: "var(--ink-600)" }} /></button>
-                          <button onClick={() => { setPromos((prev) => prev.filter((x) => x.id !== p.id)); toast("Anuncio eliminado"); }} style={{ width: 34, height: 34, borderRadius: 8, border: "1px solid var(--border-default)", background: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><Trash2 size={15} style={{ color: "var(--ink-600)" }} /></button>
+                          <button onClick={() => deletePromo(p.id)} style={{ width: 34, height: 34, borderRadius: 8, border: "1px solid var(--border-default)", background: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><Trash2 size={15} style={{ color: "var(--ink-600)" }} /></button>
                         </div>
                       </div>
                     </div>
@@ -836,67 +921,50 @@ export default function NegocioDashboard() {
                 );
               })}
             </div>
+            )}
           </div>
         )}
 
         {/* ════ EQUIPO ════════════════════════════════════════════════════════ */}
         {view === "equipo" && (
           <div style={{ padding: "26px 32px 56px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 22 }}>
-              {[{ key: "Todos", label: "Todos", icon: <Users size={15} /> }, ...GROUP_CFG.map((g) => ({ key: g.label, label: g.label, icon: g.icon }))].map((c) => {
-                const on = teamFilter === c.key;
-                return (
-                  <button key={c.key} onClick={() => setTeamFilter(c.key)} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 15px", borderRadius: 999, border: `1px solid ${on ? "var(--ink-900)" : "var(--border-default)"}`, background: on ? "var(--ink-900)" : "#fff", color: on ? "var(--gold-300)" : "var(--ink-700)", fontSize: 13.5, fontWeight: 700, cursor: "pointer" }}>
-                    <span style={{ color: on ? "var(--gold-300)" : "var(--ink-500)", display: "flex" }}>{c.icon}</span>{c.label}
-                  </button>
-                );
-              })}
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 22 }}>
+              <span style={{ fontSize: 14, color: "var(--ink-500)" }}>{team.length} {team.length === 1 ? "miembro" : "miembros"}</span>
               <button onClick={() => openModal("team")} style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 7, height: 40, padding: "0 16px", borderRadius: 10, border: "none", background: "var(--brand)", color: "#fff", fontSize: 13.5, fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)" }}><UserPlus size={17} />Agregar miembro</button>
             </div>
-            <div style={{ display: "grid", gap: 28 }}>
-              {teamSections.map((sec) => (
-                <div key={sec.key}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                    <span style={{ width: 32, height: 32, borderRadius: 10, background: "var(--surface-beige)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><span style={{ color: "var(--brand)" }}>{sec.icon}</span></span>
-                    <h3 style={{ fontSize: 17, fontWeight: 800, color: "var(--ink-900)", margin: 0 }}>{sec.label}</h3>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-400)" }}>· {sec.members.length}</span>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 14 }}>
-                    {sec.members.map((m) => (
-                      <div key={m.id} style={CARD}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
-                          <span style={{ width: 52, height: 52, borderRadius: 999, background: "#fce7f3", color: "#be185d", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700, flexShrink: 0 }}>{getInitials(m.name)}</span>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 15.5, fontWeight: 700, color: "var(--ink-900)" }}>{m.name}</div>
-                            <div style={{ fontSize: 13, color: "var(--ink-500)" }}>{m.role}</div>
-                          </div>
-                          <div style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "rgba(194,161,92,0.12)", borderRadius: 999, padding: "4px 9px", flexShrink: 0 }}>
-                            <Star size={13} style={{ color: "var(--gold-400)", fill: "var(--gold-400)" }} />
-                            <span style={{ fontSize: 12.5, fontWeight: 800, color: "var(--gold-500)" }}>{m.rating}</span>
-                          </div>
-                        </div>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "14px 0" }}>
-                          {m.specialties.map((sp) => (
-                            <span key={sp} style={{ background: "var(--ink-100)", color: "var(--ink-700)", borderRadius: 999, padding: "5px 11px", fontSize: 12, fontWeight: 600 }}>{sp}</span>
-                          ))}
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, borderTop: "1px solid var(--border-subtle)", paddingTop: 13 }}>
-                          <label style={{ display: "inline-flex", alignItems: "center", gap: 9, cursor: "pointer" }}>
-                            <Switch checked={m.available} onChange={() => setTeam((prev) => prev.map((x) => x.id === m.id ? { ...x, available: !x.available } : x))} />
-                            <span style={{ fontSize: 12.5, fontWeight: 700, color: m.available ? "var(--success-500)" : "var(--ink-400)" }}>{m.available ? "Disponible" : "No disponible"}</span>
-                          </label>
-                          <div style={{ display: "flex", gap: 6 }}>
-                            <button onClick={() => toast(`Abriendo WhatsApp de ${m.name}…`)} style={{ width: 34, height: 34, borderRadius: 8, border: "none", background: "#e4f8ec", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><MessageCircle size={16} style={{ color: "#15803d" }} /></button>
-                            <button onClick={() => openModal("team", m)} style={{ width: 34, height: 34, borderRadius: 8, border: "1px solid var(--border-default)", background: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><Pencil size={15} style={{ color: "var(--ink-600)" }} /></button>
-                            <button onClick={() => { setTeam((prev) => prev.filter((x) => x.id !== m.id)); toast("Miembro eliminado"); }} style={{ width: 34, height: 34, borderRadius: 8, border: "1px solid var(--border-default)", background: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><Trash2 size={15} style={{ color: "var(--ink-600)" }} /></button>
-                          </div>
-                        </div>
+            {team.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 0", color: "var(--ink-400)" }}>
+                <Users size={40} style={{ marginBottom: 12, opacity: 0.4 }} />
+                <p style={{ fontSize: 15, fontWeight: 600, margin: 0 }}>Aún no has agregado a tu equipo</p>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 14 }}>
+                {team.map((m) => (
+                  <div key={m.id} style={CARD}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 13 }}>
+                      <span style={{ width: 52, height: 52, borderRadius: 999, background: "#fce7f3", color: "#be185d", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700, flexShrink: 0, overflow: "hidden" }}>
+                        {m.image_url ? <img src={m.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : getInitials(m.name)}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15.5, fontWeight: 700, color: "var(--ink-900)" }}>{m.name}</div>
+                        <div style={{ fontSize: 13, color: "var(--ink-500)" }}>{m.role}</div>
                       </div>
-                    ))}
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, margin: "14px 0", minHeight: 22 }}>
+                      {m.service_ids.length === 0 ? (
+                        <span style={{ fontSize: 12.5, color: "var(--ink-400)", fontStyle: "italic" }}>Sin servicios asignados</span>
+                      ) : m.service_ids.map((sid) => (
+                        <span key={sid} style={{ background: "var(--ink-100)", color: "var(--ink-700)", borderRadius: 999, padding: "5px 11px", fontSize: 12, fontWeight: 600 }}>{serviceName(sid)}</span>
+                      ))}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6, borderTop: "1px solid var(--border-subtle)", paddingTop: 13 }}>
+                      <button onClick={() => openModal("team", m)} style={{ width: 34, height: 34, borderRadius: 8, border: "1px solid var(--border-default)", background: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><Pencil size={15} style={{ color: "var(--ink-600)" }} /></button>
+                      <button onClick={() => deleteTeam(m.id)} style={{ width: 34, height: 34, borderRadius: 8, border: "1px solid var(--border-default)", background: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><Trash2 size={15} style={{ color: "var(--ink-600)" }} /></button>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -961,30 +1029,23 @@ export default function NegocioDashboard() {
               {/* Promo form */}
               {modalType === "promo" && (
                 <div style={{ display: "grid", gap: 18 }}>
-                  <div style={{ borderRadius: 14, overflow: "hidden", background: "linear-gradient(120deg,var(--plum-700),var(--plum-500))", padding: 20, position: "relative" }}>
+                  <div style={{ borderRadius: 14, overflow: "hidden", background: form.promoType === "fixed" ? "linear-gradient(120deg,#9a6910,var(--gold-500))" : "linear-gradient(120deg,var(--plum-700),var(--plum-500))", padding: 20, position: "relative" }}>
                     <Sparkles size={54} style={{ position: "absolute", top: -6, right: -6, color: "rgba(255,255,255,0.16)" }} />
-                    <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "rgba(255,255,255,0.82)", position: "relative", display: "block" }}>{form.promoType || "Descuento"}</span>
-                    <div style={{ fontFamily: "var(--font-display)", fontSize: 30, fontWeight: 700, color: "#fff", lineHeight: 1.05, marginTop: 4, position: "relative" }}>{form.promoValue || "—"}</div>
+                    <span style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".12em", textTransform: "uppercase", color: "rgba(255,255,255,0.82)", position: "relative", display: "block" }}>{form.promoType === "fixed" ? "Monto fijo" : "Descuento"}</span>
+                    <div style={{ fontFamily: "var(--font-display)", fontSize: 30, fontWeight: 700, color: "#fff", lineHeight: 1.05, marginTop: 4, position: "relative" }}>{form.promoValue ? (form.promoType === "fixed" ? `L ${form.promoValue}` : `${form.promoValue}%`) : "—"}</div>
                     <div style={{ fontSize: 14, color: "rgba(255,255,255,0.9)", marginTop: 4, position: "relative" }}>{form.promoTitle || "Título de tu anuncio"}</div>
                   </div>
                   <label style={{ display: "block" }}><span style={FIELD_LABEL}>Título del anuncio</span><input value={form.promoTitle || ""} onChange={(e) => upd("promoTitle", e.target.value)} placeholder="Ej. 20% en tu primer corte" style={FIELD_INPUT} /></label>
+                  <label style={{ display: "block" }}><span style={FIELD_LABEL}>Descripción</span><textarea value={form.promoDesc || ""} onChange={(e) => upd("promoDesc", e.target.value)} placeholder="Detalles de la promoción" style={FIELD_TEXTAREA} /></label>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    <label style={{ display: "block" }}><span style={FIELD_LABEL}>Tipo</span>
-                      <select value={form.promoType || "Descuento"} onChange={(e) => upd("promoType", e.target.value)} style={FIELD_SELECT}>
-                        <option>Descuento</option><option>2x1</option><option>Combo</option><option>Perfil destacado</option>
+                    <label style={{ display: "block" }}><span style={FIELD_LABEL}>Tipo de descuento</span>
+                      <select value={form.promoType || "percentage"} onChange={(e) => upd("promoType", e.target.value)} style={FIELD_SELECT}>
+                        <option value="percentage">Porcentaje (%)</option><option value="fixed">Monto fijo (L)</option>
                       </select>
                     </label>
-                    <label style={{ display: "block" }}><span style={FIELD_LABEL}>Valor</span><input value={form.promoValue || ""} onChange={(e) => upd("promoValue", e.target.value)} placeholder="20% · L 650 · 2x1" style={FIELD_INPUT} /></label>
+                    <label style={{ display: "block" }}><span style={FIELD_LABEL}>Valor</span><input type="number" value={form.promoValue || ""} onChange={(e) => upd("promoValue", e.target.value)} placeholder={form.promoType === "fixed" ? "650" : "20"} style={FIELD_INPUT} /></label>
                   </div>
-                  <label style={{ display: "block" }}><span style={FIELD_LABEL}>Aplica a</span>
-                    <select value={form.promoApplies || "Todos los servicios"} onChange={(e) => upd("promoApplies", e.target.value)} style={FIELD_SELECT}>
-                      <option>Todos los servicios</option><option>Clientes nuevos</option><option>Barbería</option><option>Color</option><option>Barba & afeitado</option><option>Combo</option><option>Perfil</option>
-                    </select>
-                  </label>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    <label style={{ display: "block" }}><span style={FIELD_LABEL}>Inicio</span><input value={form.promoStart || ""} onChange={(e) => upd("promoStart", e.target.value)} placeholder="1 jun" style={FIELD_INPUT} /></label>
-                    <label style={{ display: "block" }}><span style={FIELD_LABEL}>Fin</span><input value={form.promoEnd || ""} onChange={(e) => upd("promoEnd", e.target.value)} placeholder="30 jun" style={FIELD_INPUT} /></label>
-                  </div>
+                  <label style={{ display: "block" }}><span style={FIELD_LABEL}>Válido hasta</span><input type="date" value={form.promoUntil || ""} onChange={(e) => upd("promoUntil", e.target.value)} style={FIELD_INPUT} /></label>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "#fff", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "14px 16px" }}>
                     <div><div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink-900)" }}>Activar ahora</div><div style={{ fontSize: 12.5, color: "var(--ink-500)" }}>Se mostrará en tu perfil</div></div>
                     <Switch checked={!!form.promoActive} onChange={(v) => upd("promoActive", v)} size="md" />
@@ -999,27 +1060,22 @@ export default function NegocioDashboard() {
                     <label style={{ display: "block" }}><span style={FIELD_LABEL}>Nombre</span><input value={form.tmName || ""} onChange={(e) => upd("tmName", e.target.value)} placeholder="Ej. Andrea Maradiaga" style={FIELD_INPUT} /></label>
                     <label style={{ display: "block" }}><span style={FIELD_LABEL}>Rol / cargo</span><input value={form.tmRole || ""} onChange={(e) => upd("tmRole", e.target.value)} placeholder="Ej. Barbero senior" style={FIELD_INPUT} /></label>
                   </div>
-                  <label style={{ display: "block" }}><span style={FIELD_LABEL}>Área principal</span>
-                    <select value={form.tmGroup || "cortes"} onChange={(e) => upd("tmGroup", e.target.value)} style={FIELD_SELECT}>
-                      <option value="cortes">Cortes & Fade</option><option value="color">Color & tratamientos</option><option value="barba">Barba & afeitado</option><option value="estetica">Estética & facial</option>
-                    </select>
-                  </label>
                   <div>
-                    <span style={{ ...FIELD_LABEL, display: "block", marginBottom: 9 }}>Especialidades</span>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                      {SPEC_MASTER.map((name) => {
-                        const on = (form.tmSpecs || []).includes(name);
-                        return (
-                          <button key={name} type="button" onClick={() => toggleSpec(name)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 999, cursor: "pointer", fontSize: 13, fontWeight: 600, background: on ? "var(--plum-100)" : "#fff", color: on ? "var(--plum-700)" : "var(--ink-600)", border: `1px solid ${on ? "#d8bfec" : "var(--border-default)"}` }}>
-                            {on ? <Check size={13} /> : <Plus size={13} />}{name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "#fff", border: "1px solid var(--border-subtle)", borderRadius: 10, padding: "14px 16px" }}>
-                    <div><div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink-900)" }}>Disponible hoy</div><div style={{ fontSize: 12.5, color: "var(--ink-500)" }}>Recibe reservas en la agenda</div></div>
-                    <Switch checked={!!form.tmAvailable} onChange={(v) => upd("tmAvailable", v)} size="md" />
+                    <span style={{ ...FIELD_LABEL, display: "block", marginBottom: 9 }}>Servicios que ofrece</span>
+                    {services.length === 0 ? (
+                      <p style={{ fontSize: 13, color: "var(--ink-500)", margin: 0 }}>Primero agrega servicios en la sección “Servicios”.</p>
+                    ) : (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                        {services.map((s) => {
+                          const on = (form.tmServiceIds || []).includes(s.id);
+                          return (
+                            <button key={s.id} type="button" onClick={() => toggleTmService(s.id)} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 13px", borderRadius: 999, cursor: "pointer", fontSize: 13, fontWeight: 600, background: on ? "var(--plum-100)" : "#fff", color: on ? "var(--plum-700)" : "var(--ink-600)", border: `1px solid ${on ? "#d8bfec" : "var(--border-default)"}` }}>
+                              {on ? <Check size={13} /> : <Plus size={13} />}{s.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
