@@ -10,7 +10,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<"pro"|"negocio">("pro");
+  const [role, setRole] = useState<"pro"|"business">("pro");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -27,13 +27,9 @@ export default function LoginPage() {
         : "Correo o contraseña incorrectos.");
       setLoading(false); return;
     }
-    // Determine destination based on role
-    const { data: proData } = await sb.from("pros").select("id").eq("user_id", data.user.id).maybeSingle();
-    if (proData) { window.location.href = "/dashboard/pro"; return; }
+    // Destino según el rol del perfil
     const { data: profile } = await sb.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
-    if (profile?.role === "negocio") { window.location.href = "/dashboard/negocio"; return; }
-    // Default: pro dashboard
-    window.location.href = "/dashboard/pro";
+    window.location.href = profile?.role === "business" ? "/dashboard/negocio" : "/dashboard/pro";
   }
 
   async function handleRegister(e: React.FormEvent) {
@@ -65,14 +61,14 @@ export default function LoginPage() {
 
     // If session exists (email confirmation disabled), redirect immediately
     if (data.session) {
-      window.location.href = role === "negocio" ? "/dashboard/negocio" : "/dashboard/pro";
+      window.location.href = role === "business" ? "/dashboard/negocio" : "/dashboard/pro";
       return;
     }
 
     // Email confirmation required — try signing in anyway
     const { data: signInData, error: signInErr } = await sb.auth.signInWithPassword({ email, password });
     if (!signInErr && signInData.session) {
-      window.location.href = role === "negocio" ? "/dashboard/negocio" : "/dashboard/pro";
+      window.location.href = role === "business" ? "/dashboard/negocio" : "/dashboard/pro";
       return;
     }
 
@@ -181,7 +177,7 @@ export default function LoginPage() {
                 <div>
                   <label style={labelStyle}>Tipo de cuenta</label>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                    {([["pro","Profesional","Barbero, esteticista, etc."],["negocio","Negocio","Salón, spa, centro..."]] as const).map(([val, title, desc]) => (
+                    {([["pro","Profesional","Barbero, esteticista, etc."],["business","Negocio","Salón, spa, centro..."]] as const).map(([val, title, desc]) => (
                       <button key={val} type="button" onClick={() => setRole(val)}
                         style={{ padding: "14px 12px", borderRadius: 12, border: `2px solid ${role===val?"var(--brand)":"var(--border-default)"}`, background: role===val?"var(--surface-plum)":"var(--surface-card)", cursor: "pointer", textAlign: "left" as const, transition: "all .15s" }}>
                         <div style={{ fontFamily: "var(--font-sans)", fontSize: 14, fontWeight: 700, color: role===val?"var(--brand)":"var(--ink-800)" }}>{title}</div>

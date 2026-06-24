@@ -197,6 +197,8 @@ export default function NegocioDashboard() {
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [proId, setProId] = useState<string | null>(null);
   const [bizRow, setBizRow] = useState<BizRow | null>(null);
+  // Profesional individual (sin equipo) vs negocio. Solo el negocio ve "Equipo".
+  const [isBusiness, setIsBusiness] = useState(true);
   const [profileForm, setProfileForm] = useState({ name: "", category: "", bio: "", whatsapp: "", instagram: "", address: "" });
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -222,7 +224,14 @@ export default function NegocioDashboard() {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: pro } = await supabase.from("pros").select("*").eq("user_id", user.id).maybeSingle();
+      const { data: prof } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+      setIsBusiness(prof?.role !== "pro");
+      let pro = (await supabase.from("pros").select("*").eq("user_id", user.id).maybeSingle()).data;
+      if (!pro) {
+        // Sin ficha aún (registro por web) — se crea automáticamente, igual que en la app
+        const fullName = (user.user_metadata?.full_name as string) || user.email?.split("@")[0] || "Mi negocio";
+        pro = (await supabase.from("pros").insert({ user_id: user.id, name: fullName, category: "", city: "", from_price: 0 }).select().single()).data;
+      }
       if (!pro) return;
       setProId(pro.id);
       setBizRow(pro);
@@ -394,7 +403,7 @@ export default function NegocioDashboard() {
 
   // ── derived ──────────────────────────────────────────────────────────────────
   const titleMap: Record<string, [string, string]> = {
-    perfil: ["Perfil del negocio", "Tu vitrina pública en Estilia"],
+    perfil: [isBusiness ? "Perfil del negocio" : "Mi perfil", "Tu vitrina pública en Estilia"],
     servicios: ["Servicios", "Catálogo, precios y duración"],
     anuncios: ["Anuncios", "Crea ofertas y campañas para tu perfil"],
     equipo: ["Equipo", "Barberos y estilistas por especialidad"],
@@ -436,7 +445,7 @@ export default function NegocioDashboard() {
   const business = {
     name: bizRow?.name || "Tu negocio",
     initials: getInitials(bizRow?.name || "Mi Negocio"),
-    plan: "Negocio",
+    plan: isBusiness ? "Negocio" : "Profesional",
     category: bizRow?.category || "Sin categoría",
     rating: bizRow?.rating ? String(bizRow.rating) : "Nuevo",
     reviews: bizRow?.review_count ?? 0,
@@ -496,7 +505,7 @@ export default function NegocioDashboard() {
             <span style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700, color: "#fff" }}>E</span>
           </div>
           <span style={{ fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 600, color: "var(--ink-50)" }}>Estilia</span>
-          <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700, letterSpacing: ".06em", color: "var(--gold-400)", border: "1px solid rgba(221,197,155,0.35)", padding: "3px 7px", borderRadius: 999 }}>BIZ</span>
+          <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700, letterSpacing: ".06em", color: "var(--gold-400)", border: "1px solid rgba(221,197,155,0.35)", padding: "3px 7px", borderRadius: 999 }}>{isBusiness ? "BIZ" : "PRO"}</span>
         </div>
 
         {/* Business switcher */}
@@ -513,11 +522,13 @@ export default function NegocioDashboard() {
         <div style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: ".1em", textTransform: "uppercase", color: "rgba(245,239,227,0.36)", padding: "0 12px 8px" }}>Tu vitrina</div>
         <nav style={{ display: "flex", flexDirection: "column", gap: 3 }}>
           {([
-            { id: "perfil" as View, icon: <Store size={19} />, label: "Perfil del negocio" },
+            { id: "perfil" as View, icon: <Store size={19} />, label: isBusiness ? "Perfil del negocio" : "Mi perfil" },
             { id: "servicios" as View, icon: <Scissors size={19} />, label: "Servicios" },
             { id: "anuncios" as View, icon: <Megaphone size={19} />, label: "Anuncios" },
             { id: "equipo" as View, icon: <Users size={19} />, label: "Equipo" },
-          ] as { id: View; icon: React.ReactNode; label: string }[]).map((n) => (
+          ] as { id: View; icon: React.ReactNode; label: string }[])
+            .filter((n) => isBusiness || n.id !== "equipo")
+            .map((n) => (
             <button key={n.id} onClick={() => setView(n.id)} style={navBtnStyle(view === n.id)}>
               <span style={{ color: navIconColor(view === n.id), display: "flex", alignItems: "center" }}>{n.icon}</span>{n.label}
             </button>
@@ -926,7 +937,7 @@ export default function NegocioDashboard() {
         )}
 
         {/* ════ EQUIPO ════════════════════════════════════════════════════════ */}
-        {view === "equipo" && (
+        {view === "equipo" && isBusiness && (
           <div style={{ padding: "26px 32px 56px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 22 }}>
               <span style={{ fontSize: 14, color: "var(--ink-500)" }}>{team.length} {team.length === 1 ? "miembro" : "miembros"}</span>
