@@ -6,7 +6,7 @@ import {
   ChevronsUpDown, Sparkles, Search, Bell, Plus, PencilRuler, ExternalLink,
   Image as ImageIcon, Pencil, MapPin, Phone, AtSign, Check, Clock,
   Trash2, CalendarCheck, UserPlus, MessageCircle, Store, Palette,
-  Brush, X, BarChart3, Users2, ArrowLeft, Smartphone, BadgeCheck,
+  Brush, X, Menu, BarChart3, Users2, ArrowLeft, Smartphone, BadgeCheck,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase-browser";
 
@@ -199,6 +199,8 @@ export default function NegocioDashboard() {
   const [bizRow, setBizRow] = useState<BizRow | null>(null);
   // Profesional individual (sin equipo) vs negocio. Solo el negocio ve "Equipo".
   const [isBusiness, setIsBusiness] = useState(true);
+  // Drawer del sidebar en móvil
+  const [navOpen, setNavOpen] = useState(false);
   const [profileForm, setProfileForm] = useState({ name: "", category: "", bio: "", whatsapp: "", instagram: "", address: "" });
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -216,7 +218,7 @@ export default function NegocioDashboard() {
     toastTimer.current = setTimeout(() => setToastShow(false), 2600);
   }, []);
 
-  const setView = (v: View) => { setViewState(v); if (typeof window !== "undefined") window.scrollTo({ top: 0 }); };
+  const setView = (v: View) => { setViewState(v); setNavOpen(false); if (typeof window !== "undefined") window.scrollTo({ top: 0 }); };
   const upd = (k: keyof FormState, v: unknown) => setForm((f) => ({ ...f, [k]: v }));
 
   // ── data load ────────────────────────────────────────────────────────────────
@@ -497,8 +499,11 @@ export default function NegocioDashboard() {
   return (
     <div style={{ fontFamily: "var(--font-sans)", color: "var(--ink-900)", background: "var(--bg-page,#faf7fc)", minHeight: "100vh", display: "flex" }}>
 
+      {/* Backdrop del drawer (solo móvil cuando está abierto) */}
+      {navOpen && <div className="dash-backdrop" onClick={() => setNavOpen(false)} />}
+
       {/* ═══ SIDEBAR ═══════════════════════════════════════════════════════════ */}
-      <aside style={{ width: 252, flexShrink: 0, background: "var(--ink-900)", display: "flex", flexDirection: "column", padding: "22px 16px", position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
+      <aside className={"dash-sidebar" + (navOpen ? " open" : "")} style={{ width: 252, flexShrink: 0, background: "var(--ink-900)", display: "flex", flexDirection: "column", padding: "22px 16px", position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
         {/* Logo */}
         <div style={{ display: "flex", alignItems: "center", gap: 11, padding: "4px 8px 18px" }}>
           <div style={{ width: 34, height: 34, borderRadius: 10, background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -562,13 +567,16 @@ export default function NegocioDashboard() {
       <div style={{ flex: 1, minWidth: 0 }}>
 
         {/* TOPBAR */}
-        <header style={{ display: "flex", alignItems: "center", gap: 14, padding: "22px 32px", borderBottom: "1px solid var(--border-subtle)", background: "rgba(250,247,252,0.82)", backdropFilter: "blur(10px)", position: "sticky", top: 0, zIndex: 20 }}>
+        <header className="dash-topbar" style={{ display: "flex", alignItems: "center", gap: 14, padding: "22px 32px", borderBottom: "1px solid var(--border-subtle)", background: "rgba(250,247,252,0.82)", backdropFilter: "blur(10px)", position: "sticky", top: 0, zIndex: 20 }}>
+          <button className="dash-burger" onClick={() => setNavOpen(true)} aria-label="Abrir menú" style={{ width: 42, height: 42, borderRadius: 10, border: "1px solid var(--border-default)", background: "#fff", cursor: "pointer", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Menu size={20} style={{ color: "var(--ink-700)" }} />
+          </button>
           <div style={{ minWidth: 0 }}>
             <h1 style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 600, color: "var(--ink-900)", margin: 0, letterSpacing: "-0.01em" }}>{pageTitle}</h1>
             <p style={{ fontSize: 13.5, color: "var(--ink-500)", margin: "2px 0 0" }}>{pageSubtitle}</p>
           </div>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 9, height: 42, padding: "0 14px", background: "#fff", border: "1px solid var(--border-default)", borderRadius: 999, width: 230 }}>
+            <div className="dash-search" style={{ display: "flex", alignItems: "center", gap: 9, height: 42, padding: "0 14px", background: "#fff", border: "1px solid var(--border-default)", borderRadius: 999, width: 230 }}>
               <Search size={17} style={{ color: "var(--ink-400)", flexShrink: 0 }} />
               <input placeholder="Buscar…" style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", fontSize: 13.5, color: "var(--ink-900)", fontFamily: "var(--font-sans)" }} />
             </div>
@@ -638,7 +646,7 @@ export default function NegocioDashboard() {
                 </div>
 
                 {/* 2-col grid */}
-                <div style={{ display: "grid", gridTemplateColumns: "1.7fr 1fr", gap: 20, marginTop: 20, alignItems: "start" }}>
+                <div className="dash-grid-2" style={{ display: "grid", gridTemplateColumns: "1.7fr 1fr", gap: 20, marginTop: 20, alignItems: "start" }}>
                   <div style={{ display: "grid", gap: 20 }}>
                     {/* Acerca de */}
                     <div style={CARD}>
@@ -719,7 +727,7 @@ export default function NegocioDashboard() {
 
             {/* ─── Editor ─── */}
             {layout === "B" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1.5fr 0.9fr", gap: 24, alignItems: "start" }}>
+              <div className="dash-grid-2" style={{ display: "grid", gridTemplateColumns: "1.5fr 0.9fr", gap: 24, alignItems: "start" }}>
                 <div style={{ display: "grid", gap: 18 }}>
                   {/* Identidad */}
                   <div style={CARD}>
