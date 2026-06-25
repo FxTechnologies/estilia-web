@@ -38,7 +38,7 @@ export function Hero() {
           Descubre, compara y agenda con los mejores profesionales verificados cerca de ti. Recordatorios por WhatsApp.
         </p>
 
-        <form onSubmit={handleSearch} style={{ background: "#fff", borderRadius: 20, boxShadow: "var(--shadow-xl)", padding: 8, display: "flex", flexWrap: "wrap" as const, alignItems: "stretch", gap: 2, maxWidth: 800 }}>
+        <form onSubmit={handleSearch} className="hero-search" style={{ background: "#fff", borderRadius: 20, boxShadow: "var(--shadow-xl)", padding: 8, display: "flex", flexWrap: "wrap" as const, alignItems: "stretch", gap: 2, maxWidth: 800 }}>
           <label style={{ flex: "2 1 200px", minWidth: 160, display: "flex", flexDirection: "column" as const, gap: 3, padding: "9px 16px", borderRadius: 14, cursor: "text" }}>
             <span style={{ fontFamily: "var(--font-sans)", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--ink-500)" }}>Servicio</span>
             <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
@@ -48,7 +48,7 @@ export function Hero() {
             </div>
           </label>
 
-          <span style={{ width: 1, alignSelf: "center", height: 40, background: "var(--border-subtle)" }} />
+          <span className="hero-search-sep" style={{ width: 1, alignSelf: "center", height: 40, background: "var(--border-subtle)" }} />
 
           <label style={{ flex: "1 1 140px", minWidth: 130, display: "flex", flexDirection: "column" as const, gap: 3, padding: "9px 16px", borderRadius: 14, cursor: "pointer" }}>
             <span style={{ fontFamily: "var(--font-sans)", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" as const, color: "var(--ink-500)" }}>Ubicación</span>

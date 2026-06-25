@@ -3,7 +3,7 @@ export function AppDownloadBanner() {
     <section id="app" style={{ background: "linear-gradient(135deg, var(--plum-900) 0%, var(--plum-700) 60%, var(--plum-600) 100%)", padding: "clamp(64px,10vw,112px) clamp(18px,4vw,40px)", overflow: "hidden", position: "relative" }}>
       <div style={{ position: "absolute", top: -80, right: -80, width: 400, height: 400, borderRadius: "50%", background: "rgba(135,90,160,0.18)", pointerEvents: "none" }} />
       <div style={{ position: "absolute", bottom: -60, left: "30%", width: 300, height: 300, borderRadius: "50%", background: "rgba(194,161,92,0.10)", pointerEvents: "none" }} />
-      <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr auto", gap: 48, alignItems: "center", position: "relative" }}>
+      <div className="app-banner-grid" style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "1fr auto", gap: 48, alignItems: "center", position: "relative" }}>
         <div>
           <div style={{ fontFamily: "var(--font-sans)", fontSize: 12, fontWeight: 700, letterSpacing: "0.16em", textTransform: "uppercase" as const, color: "var(--gold-400)", marginBottom: 16 }}>
             Descarga la app

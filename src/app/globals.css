@@ -133,3 +133,16 @@ body {
 /* ForBusiness CTA button */
 .forbiz-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--brand); color: #fff; font-family: var(--font-sans); font-size: 15px; font-weight: 700; padding: 14px 28px; border-radius: 999px; text-decoration: none; box-shadow: var(--shadow-brand); transition: transform .2s; }
 .forbiz-btn:hover { transform: translateY(-2px); }
+
+/* ─── Responsive: apilar layouts de varias columnas en pantallas chicas ─── */
+@media (max-width: 600px) {
+  /* Buscador del hero: apilar servicio / ubicación / botón */
+  .hero-search { flex-direction: column; align-items: stretch !important; gap: 4px !important; }
+  .hero-search > * { width: 100%; flex: 0 0 auto !important; }
+  .hero-search-sep { display: none !important; }
+  .hero-search button { justify-content: center; min-height: 52px; margin-top: 4px; }
+}
+@media (max-width: 760px) {
+  /* Banner de descarga: el mockup del teléfono baja debajo del texto */
+  .app-banner-grid { grid-template-columns: 1fr !important; gap: 36px !important; }
+}

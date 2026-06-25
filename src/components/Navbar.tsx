@@ -86,7 +86,7 @@ export function Navbar() {
         </a>
 
         {/* Desktop nav */}
-        <nav style={{ display: "flex", alignItems: "center", gap: 2, marginLeft: 8, flex: 1, flexWrap: "wrap" }} className="hidden md:flex">
+        <nav style={{ alignItems: "center", gap: 2, marginLeft: 8, flex: 1, flexWrap: "wrap" }} className="hidden md:flex">
           {NAV.map(({ label, href }) => (
             <a key={label} href={href} style={{
               background: "transparent", border: "none", cursor: "pointer",
