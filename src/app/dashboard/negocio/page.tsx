@@ -72,6 +72,7 @@ interface FormState {
   tmName?: string;
   tmRole?: string;
   tmServiceIds?: string[];
+  tmImageUrl?: string;
 }
 
 type ModalType = "service" | "promo" | "team" | null;
@@ -201,6 +202,8 @@ export default function NegocioDashboard() {
   const [isBusiness, setIsBusiness] = useState(true);
   // Drawer del sidebar en móvil
   const [navOpen, setNavOpen] = useState(false);
+  // Subida de foto de miembro del equipo
+  const [tmUploading, setTmUploading] = useState(false);
   const [profileForm, setProfileForm] = useState({ name: "", category: "", bio: "", whatsapp: "", instagram: "", address: "" });
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -312,8 +315,8 @@ export default function NegocioDashboard() {
              : { promoTitle: "", promoDesc: "", promoType: "percentage", promoValue: "", promoUntil: "", promoActive: true };
     } else if (type === "team") {
       const m = item as TeamMember | undefined;
-      f = m ? { tmName: m.name, tmRole: m.role, tmServiceIds: [...m.service_ids] }
-             : { tmName: "", tmRole: "", tmServiceIds: [] };
+      f = m ? { tmName: m.name, tmRole: m.role, tmServiceIds: [...m.service_ids], tmImageUrl: m.image_url ?? "" }
+             : { tmName: "", tmRole: "", tmServiceIds: [], tmImageUrl: "" };
     }
     setForm(f);
     setEditingId(item ? (item as { id: string | number }).id : null);
@@ -359,11 +362,24 @@ export default function NegocioDashboard() {
     toast("Anuncio eliminado");
   };
 
+  const uploadTeamPhoto = async (file: File) => {
+    if (!file || !proId) return;
+    setTmUploading(true);
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `staff/${proId}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+    setTmUploading(false);
+    if (error) { toast("No se pudo subir la foto"); return; }
+    const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+    upd("tmImageUrl", data.publicUrl);
+    toast("Foto lista");
+  };
+
   const saveTeam = async () => {
     if (!form.tmName?.trim()) { toast("Escribe el nombre del miembro"); return; }
     if (!proId) { toast("No se encontró tu negocio"); return; }
     const wantIds = form.tmServiceIds || [];
-    const fields = { name: form.tmName.trim(), role: form.tmRole?.trim() || "Especialista" };
+    const fields = { name: form.tmName.trim(), role: form.tmRole?.trim() || "Especialista", image_url: form.tmImageUrl?.trim() || null };
 
     if (editingId) {
       const id = editingId as string;
@@ -1075,6 +1091,24 @@ export default function NegocioDashboard() {
               {/* Team form */}
               {modalType === "team" && (
                 <div style={{ display: "grid", gap: 18 }}>
+                  {/* Foto del miembro */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    <div style={{ width: 72, height: 72, borderRadius: 999, overflow: "hidden", background: "#fce7f3", color: "#be185d", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, fontWeight: 700, flexShrink: 0 }}>
+                      {form.tmImageUrl
+                        ? <img src={form.tmImageUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        : (form.tmName ? getInitials(form.tmName) : <UserPlus size={26} />)}
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <label style={{ display: "inline-flex", alignItems: "center", gap: 8, height: 40, padding: "0 16px", borderRadius: 10, border: "1px solid var(--border-default)", background: "#fff", color: "var(--ink-800)", fontSize: 13.5, fontWeight: 700, cursor: tmUploading ? "default" : "pointer", opacity: tmUploading ? 0.6 : 1 }}>
+                        <ImageIcon size={16} />{tmUploading ? "Subiendo…" : (form.tmImageUrl ? "Cambiar foto" : "Subir foto")}
+                        <input type="file" accept="image/*" disabled={tmUploading} style={{ display: "none" }}
+                          onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadTeamPhoto(f); e.target.value = ""; }} />
+                      </label>
+                      {form.tmImageUrl && (
+                        <button type="button" onClick={() => upd("tmImageUrl", "")} style={{ height: 40, padding: "0 12px", borderRadius: 10, border: "1px solid var(--border-default)", background: "#fff", color: "var(--ink-500)", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Quitar</button>
+                      )}
+                    </div>
+                  </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                     <label style={{ display: "block" }}><span style={FIELD_LABEL}>Nombre</span><input value={form.tmName || ""} onChange={(e) => upd("tmName", e.target.value)} placeholder="Ej. Andrea Maradiaga" style={FIELD_INPUT} /></label>
                     <label style={{ display: "block" }}><span style={FIELD_LABEL}>Rol / cargo</span><input value={form.tmRole || ""} onChange={(e) => upd("tmRole", e.target.value)} placeholder="Ej. Barbero senior" style={FIELD_INPUT} /></label>
