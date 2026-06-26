@@ -54,6 +54,7 @@ type BizRow = {
   name: string | null; category: string | null; bio: string | null;
   whatsapp: string | null; instagram: string | null; address: string | null;
   image_url: string | null; rating: number | null; review_count: number | null;
+  specialties: string[] | null;
 };
 
 interface FormState {
@@ -207,8 +208,9 @@ export default function NegocioDashboard() {
   const [coverUploading, setCoverUploading] = useState(false);
   const [galleryUploading, setGalleryUploading] = useState(false);
   const [gallery, setGallery] = useState<{ id: string; url: string; caption: string | null }[]>([]);
-  const [profileForm, setProfileForm] = useState({ name: "", category: "", bio: "", whatsapp: "", instagram: "", address: "" });
+  const [profileForm, setProfileForm] = useState<{ name: string; category: string; bio: string; whatsapp: string; instagram: string; address: string; specialties: string[] }>({ name: "", category: "", bio: "", whatsapp: "", instagram: "", address: "", specialties: [] });
   const [savingProfile, setSavingProfile] = useState(false);
+  const [newSpec, setNewSpec] = useState("");
 
   const [modalType, setModalType] = useState<ModalType>(null);
   const [editingId, setEditingId] = useState<string | number | null>(null);
@@ -246,6 +248,7 @@ export default function NegocioDashboard() {
       setProfileForm({
         name: pro.name || "", category: pro.category || "", bio: pro.bio || "",
         whatsapp: pro.whatsapp || "", instagram: pro.instagram || "", address: pro.address || "",
+        specialties: pro.specialties ?? [],
       });
       const { data: svcs } = await supabase.from("services").select("*").eq("pro_id", pro.id);
       if (svcs) setServices(svcs.map((s) => ({ ...s, active: true, cat: "Barbería" })));
@@ -301,11 +304,21 @@ export default function NegocioDashboard() {
       instagram: profileForm.instagram.trim(), address: profileForm.address.trim(),
     };
     const { error } = await supabase.from("pros").update(payload).eq("id", proId);
+    if (error) { setSavingProfile(false); toast("No se pudo guardar"); return; }
+    // Especialidades en update aparte: si la columna aún no existe, no rompe el guardado del resto.
+    const { error: specErr } = await supabase.from("pros").update({ specialties: profileForm.specialties }).eq("id", proId);
     setSavingProfile(false);
-    if (error) { toast("No se pudo guardar"); return; }
-    setBizRow((r) => (r ? { ...r, ...payload } : r));
-    toast("Perfil actualizado");
+    setBizRow((r) => (r ? { ...r, ...payload, specialties: specErr ? r.specialties : profileForm.specialties } : r));
+    toast(specErr ? "Perfil guardado (falta la columna 'specialties' para guardar especialidades)" : "Perfil actualizado");
   };
+
+  const addSpec = () => {
+    const v = newSpec.trim();
+    if (!v) return;
+    if (!profileForm.specialties.includes(v)) setProfileForm((f) => ({ ...f, specialties: [...f.specialties, v] }));
+    setNewSpec("");
+  };
+  const removeSpec = (sp: string) => setProfileForm((f) => ({ ...f, specialties: f.specialties.filter((x) => x !== sp) }));
 
   // ── modal open/close ─────────────────────────────────────────────────────────
   const openModal = (type: ModalType, item?: ServiceRow | Promo | TeamMember) => {
@@ -512,7 +525,7 @@ export default function NegocioDashboard() {
     reviews: bizRow?.review_count ?? 0,
     cover: bizRow?.image_url || "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=1100&q=80&auto=format&fit=crop",
     about: bizRow?.bio || "Aún no has agregado una descripción de tu negocio.",
-    specialties: ["Fade", "Barba", "Diseño", "Coloración", "Afeitado a navaja"],
+    specialties: bizRow?.specialties ?? [],
     phone: bizRow?.whatsapp || "—",
     instagram: bizRow?.instagram || "—",
     address: bizRow?.address || "—",
@@ -691,7 +704,7 @@ export default function NegocioDashboard() {
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><MapPin size={15} style={{ color: "var(--gold-300)" }} />{business.address}</span>
                       </div>
                     </div>
-                    <button onClick={() => toast("Editar identidad del negocio")} style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "#fff", border: "none", borderRadius: 10, padding: "10px 16px", cursor: "pointer", fontSize: 13.5, fontWeight: 700, color: "var(--ink-900)", flexShrink: 0 }}>
+                    <button onClick={() => setLayout("B")} style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "#fff", border: "none", borderRadius: 10, padding: "10px 16px", cursor: "pointer", fontSize: 13.5, fontWeight: 700, color: "var(--ink-900)", flexShrink: 0 }}>
                       <Pencil size={15} style={{ color: "var(--brand)" }} />Editar
                     </button>
                   </div>
@@ -704,7 +717,7 @@ export default function NegocioDashboard() {
                     <div style={CARD}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                         <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--ink-900)", margin: 0 }}>Acerca de</h3>
-                        <button onClick={() => toast("Editar descripción")} style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid var(--border-default)", background: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                        <button onClick={() => setLayout("B")} style={{ width: 32, height: 32, borderRadius: 8, border: "1px solid var(--border-default)", background: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
                           <Pencil size={15} style={{ color: "var(--ink-600)" }} />
                         </button>
                       </div>
@@ -722,7 +735,7 @@ export default function NegocioDashboard() {
                             <Sparkles size={13} style={{ color: "var(--gold-500)" }} />{sp}
                           </span>
                         ))}
-                        <button onClick={() => toast("Editar especialidades")} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#fff", border: "1px dashed var(--border-default)", borderRadius: 999, padding: "7px 14px", fontSize: 13, fontWeight: 700, color: "var(--ink-600)", cursor: "pointer" }}>
+                        <button onClick={() => setLayout("B")} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#fff", border: "1px dashed var(--border-default)", borderRadius: 999, padding: "7px 14px", fontSize: 13, fontWeight: 700, color: "var(--ink-600)", cursor: "pointer" }}>
                           <Plus size={14} />Agregar
                         </button>
                       </div>
@@ -810,12 +823,20 @@ export default function NegocioDashboard() {
                       <span style={{ width: 34, height: 34, borderRadius: 10, background: "var(--surface-beige)", display: "inline-flex", alignItems: "center", justifyContent: "center" }}><Sparkles size={18} style={{ color: "var(--brand)" }} /></span>
                       <h3 style={{ fontSize: 16, fontWeight: 800, color: "var(--ink-900)", margin: 0 }}>Especialidades</h3>
                     </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 9 }}>
-                      {business.specialties.map((sp) => (
-                        <span key={sp} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--plum-100)", color: "var(--plum-700)", border: "1px solid #d8bfec", borderRadius: 999, padding: "7px 14px", fontSize: 13, fontWeight: 600 }}>{sp}</span>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 9, marginBottom: 14 }}>
+                      {profileForm.specialties.length === 0 && <span style={{ fontSize: 13, color: "var(--ink-400)" }}>Aún no agregas especialidades.</span>}
+                      {profileForm.specialties.map((sp) => (
+                        <span key={sp} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--plum-100)", color: "var(--plum-700)", border: "1px solid #d8bfec", borderRadius: 999, padding: "7px 10px 7px 14px", fontSize: 13, fontWeight: 600 }}>
+                          {sp}
+                          <button type="button" onClick={() => removeSpec(sp)} aria-label={`Quitar ${sp}`} style={{ border: "none", background: "transparent", cursor: "pointer", color: "var(--plum-700)", display: "inline-flex", padding: 0 }}><X size={13} /></button>
+                        </span>
                       ))}
-                      <button style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "#fff", border: "1px dashed var(--border-default)", borderRadius: 999, padding: "7px 14px", fontSize: 13, fontWeight: 700, color: "var(--ink-600)", cursor: "pointer" }}><Plus size={14} />Agregar</button>
                     </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input value={newSpec} onChange={(e) => setNewSpec(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSpec(); } }} placeholder="Ej. Balayage, Fade, Barba…" style={{ ...FIELD_INPUT, flex: 1 }} />
+                      <button type="button" onClick={addSpec} style={{ height: 46, padding: "0 18px", borderRadius: 10, border: "none", background: "var(--brand)", color: "#fff", fontSize: 14, fontWeight: 700, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 7 }}><Plus size={16} />Agregar</button>
+                    </div>
+                    <p style={{ fontSize: 12, color: "var(--ink-400)", margin: "10px 0 0" }}>Se guardan con “Guardar cambios”.</p>
                   </div>
                   {/* Horario */}
                   <div style={CARD}>
