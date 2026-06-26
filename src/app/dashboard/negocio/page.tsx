@@ -204,6 +204,9 @@ export default function NegocioDashboard() {
   const [navOpen, setNavOpen] = useState(false);
   // Subida de foto de miembro del equipo
   const [tmUploading, setTmUploading] = useState(false);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const [gallery, setGallery] = useState<{ id: string; url: string; caption: string | null }[]>([]);
   const [profileForm, setProfileForm] = useState({ name: "", category: "", bio: "", whatsapp: "", instagram: "", address: "" });
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -257,6 +260,8 @@ export default function NegocioDashboard() {
       })));
       const { data: proms } = await supabase.from("promotions").select("*").eq("pro_id", pro.id).order("created_at", { ascending: false });
       if (proms) setPromos(proms as Promo[]);
+      const { data: gal } = await supabase.from("portfolio_photos").select("id, url, caption").eq("pro_id", pro.id).order("created_at");
+      if (gal) setGallery(gal as { id: string; url: string; caption: string | null }[]);
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -375,6 +380,44 @@ export default function NegocioDashboard() {
     toast("Foto lista");
   };
 
+  // Portada del negocio (pros.image_url) — sube y guarda al instante
+  const uploadCover = async (file: File) => {
+    if (!file || !proId) return;
+    setCoverUploading(true);
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `pros/${proId}-cover-${Date.now()}.${ext}`;
+    const up = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+    if (up.error) { setCoverUploading(false); toast("No se pudo subir la portada"); return; }
+    const url = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+    const { error } = await supabase.from("pros").update({ image_url: url }).eq("id", proId);
+    setCoverUploading(false);
+    if (error) { toast("No se pudo guardar"); return; }
+    setBizRow((r) => (r ? { ...r, image_url: url } : r));
+    toast("Portada actualizada");
+  };
+
+  // Galería (portfolio_photos) — sube, guarda y permite eliminar
+  const uploadGalleryPhoto = async (file: File) => {
+    if (!file || !proId) return;
+    setGalleryUploading(true);
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `portfolio/${proId}-${Date.now()}.${ext}`;
+    const up = await supabase.storage.from("avatars").upload(path, file, { upsert: true, contentType: file.type });
+    if (up.error) { setGalleryUploading(false); toast("No se pudo subir la foto"); return; }
+    const url = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+    const { data, error } = await supabase.from("portfolio_photos").insert({ pro_id: proId, url, caption: null }).select("id, url, caption").single();
+    setGalleryUploading(false);
+    if (error || !data) { toast("No se pudo guardar"); return; }
+    setGallery((g) => [...g, data as { id: string; url: string; caption: string | null }]);
+    toast("Foto agregada a la galería");
+  };
+
+  const deleteGalleryPhoto = async (id: string) => {
+    await supabase.from("portfolio_photos").delete().eq("id", id);
+    setGallery((g) => g.filter((x) => x.id !== id));
+    toast("Foto eliminada");
+  };
+
   const saveTeam = async () => {
     if (!form.tmName?.trim()) { toast("Escribe el nombre del miembro"); return; }
     if (!proId) { toast("No se encontró tu negocio"); return; }
@@ -451,7 +494,7 @@ export default function NegocioDashboard() {
   const activos = promos.filter((p) => p.active).length;
 
   const checks = [
-    { label: "Foto de portada", done: true }, { label: "Descripción del negocio", done: true },
+    { label: "Foto de portada", done: !!bizRow?.image_url }, { label: "Descripción del negocio", done: !!bizRow?.bio },
     { label: "Servicios publicados", done: services.length > 0 }, { label: "Equipo asignado", done: team.length > 0 },
     { label: "Redes y contacto", done: true }, { label: "Métodos de pago", done: false },
   ];
@@ -474,15 +517,6 @@ export default function NegocioDashboard() {
     instagram: bizRow?.instagram || "—",
     address: bizRow?.address || "—",
   };
-
-  const gallery = [
-    "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=400&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=400&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=400&q=80&auto=format&fit=crop",
-    "https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&q=80&auto=format&fit=crop",
-  ];
 
   const hours = [
     { d: "Lunes", h: "9:00 – 19:00" }, { d: "Martes", h: "9:00 – 19:00" }, { d: "Miércoles", h: "9:00 – 19:00" },
@@ -636,9 +670,11 @@ export default function NegocioDashboard() {
                 <div style={{ position: "relative", height: 280, borderRadius: 16, overflow: "hidden", boxShadow: "var(--shadow-sm)" }}>
                   <img src={business.cover} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
                   <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top,rgba(28,22,34,0.86),rgba(28,22,34,0.05) 60%)" }} />
-                  <button onClick={() => toast("Subir nueva portada")} style={{ position: "absolute", top: 16, right: 16, display: "inline-flex", alignItems: "center", gap: 7, background: "rgba(255,255,255,0.92)", border: "none", borderRadius: 999, padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700, color: "var(--ink-900)" }}>
-                    <ImageIcon size={15} />Cambiar portada
-                  </button>
+                  <label style={{ position: "absolute", top: 16, right: 16, display: "inline-flex", alignItems: "center", gap: 7, background: "rgba(255,255,255,0.92)", borderRadius: 999, padding: "8px 14px", cursor: coverUploading ? "default" : "pointer", fontSize: 13, fontWeight: 700, color: "var(--ink-900)", opacity: coverUploading ? 0.7 : 1 }}>
+                    <ImageIcon size={15} />{coverUploading ? "Subiendo…" : "Cambiar portada"}
+                    <input type="file" accept="image/*" disabled={coverUploading} style={{ display: "none" }}
+                      onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadCover(f); e.target.value = ""; }} />
+                  </label>
                   <div style={{ position: "absolute", left: 24, right: 24, bottom: 22, display: "flex", alignItems: "flex-end", gap: 18 }}>
                     <div style={{ width: 88, height: 88, borderRadius: 14, background: "var(--brand)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontSize: 34, fontWeight: 600, flexShrink: 0, border: "3px solid #fff", boxShadow: "var(--shadow-md)" }}>
                       {business.initials}
@@ -698,14 +734,19 @@ export default function NegocioDashboard() {
                         <span style={{ fontSize: 13, color: "var(--ink-500)" }}>{gallery.length} fotos</span>
                       </div>
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: 12 }}>
-                        {gallery.map((g, i) => (
-                          <div key={i} style={{ position: "relative", aspectRatio: "1/1", borderRadius: 10, overflow: "hidden", background: "var(--surface-beige)" }}>
-                            <img src={g} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        {gallery.map((g) => (
+                          <div key={g.id} style={{ position: "relative", aspectRatio: "1/1", borderRadius: 10, overflow: "hidden", background: "var(--surface-beige)" }}>
+                            <img src={g.url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            <button onClick={() => deleteGalleryPhoto(g.id)} aria-label="Eliminar foto" style={{ position: "absolute", top: 6, right: 6, width: 28, height: 28, borderRadius: 8, border: "none", background: "rgba(28,22,34,0.6)", color: "#fff", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                              <Trash2 size={14} />
+                            </button>
                           </div>
                         ))}
-                        <button onClick={() => toast("Subir foto a la galería")} style={{ aspectRatio: "1/1", borderRadius: 10, border: "1px dashed var(--border-default)", background: "var(--ink-50,#f9f5ff)", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, color: "var(--ink-500)" }}>
-                          <Plus size={22} /><span style={{ fontSize: 12, fontWeight: 700 }}>Subir foto</span>
-                        </button>
+                        <label style={{ aspectRatio: "1/1", borderRadius: 10, border: "1px dashed var(--border-default)", background: "var(--ink-50,#f9f5ff)", cursor: galleryUploading ? "default" : "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, color: "var(--ink-500)", opacity: galleryUploading ? 0.7 : 1 }}>
+                          <Plus size={22} /><span style={{ fontSize: 12, fontWeight: 700 }}>{galleryUploading ? "Subiendo…" : "Subir foto"}</span>
+                          <input type="file" accept="image/*" disabled={galleryUploading} style={{ display: "none" }}
+                            onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadGalleryPhoto(f); e.target.value = ""; }} />
+                        </label>
                       </div>
                     </div>
                   </div>
